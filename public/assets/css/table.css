@@ -1,0 +1,22 @@
+/* =============================================================
+   📋 TABLE.CSS - Style untuk tabel data
+   ============================================================= */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+}
+th, td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+  font-size: 14px;
+}
+th {
+  background: var(--color-secondary);
+  color: var(--color-text);
+  font-weight: 700;
+}
+tr:hover { background: #f0fdf4; }

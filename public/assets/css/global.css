@@ -1,0 +1,62 @@
+/* =============================================================
+   🌿 Kinanti’s Art Productions
+   🧩 GLOBAL.CSS - Base Layout & Reset Styles
+   Version: 2.0 (November 2025)
+   ============================================================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: #f9fafb;
+  color: #14532d;
+  line-height: 1.6;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* 🌿 Responsive Sidebar */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: -100%;
+    top: 0;
+    width: 220px;
+    height: 100vh;
+    background: #d1fae5;
+    transition: left 0.3s ease;
+    z-index: 999;
+  }
+  .sidebar.active {
+    left: 0;
+  }
+  #sidebar-toggle {
+    display: block;
+    background: #14532d;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    margin: 8px;
+    border-radius: 6px;
+  }
+  main {
+    margin-left: 0 !important;
+  }
+}
