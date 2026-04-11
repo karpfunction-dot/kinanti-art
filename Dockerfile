@@ -11,6 +11,10 @@ RUN apt-get update && apt-get install -y \
 
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
+# Disable conflicting MPM modules
+RUN a2dismod mpm_event mpm_worker
+RUN a2enmod mpm_prefork
+
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
@@ -24,8 +28,14 @@ RUN chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache
 
 RUN a2enmod rewrite
 
-# Copy Apache config
-COPY .docker/vhost.conf /etc/apache2/sites-available/000-default.conf
+RUN echo '<VirtualHost *:8080>
+    DocumentRoot /var/www/html/public
+    <Directory /var/www/html/public>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
 EXPOSE 8080
 
