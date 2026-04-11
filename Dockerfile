@@ -11,7 +11,6 @@ RUN apt-get update && apt-get install -y \
 
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
-# Disable conflicting MPM modules
 RUN a2dismod mpm_event mpm_worker
 RUN a2enmod mpm_prefork
 
@@ -28,14 +27,16 @@ RUN chmod -R 755 /var/www/html/storage /var/www/html/bootstrap/cache
 
 RUN a2enmod rewrite
 
-RUN echo '<VirtualHost *:8080>
-    DocumentRoot /var/www/html/public
-    <Directory /var/www/html/public>
-        Options Indexes FollowSymLinks
-        AllowOverride All
-        Require all granted
-    </Directory>
-</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
+RUN echo "Listen 8080" >> /etc/apache2/ports.conf
+
+RUN echo '<VirtualHost *:8080>' > /etc/apache2/sites-available/000-default.conf
+RUN echo '    DocumentRoot /var/www/html/public' >> /etc/apache2/sites-available/000-default.conf
+RUN echo '    <Directory /var/www/html/public>' >> /etc/apache2/sites-available/000-default.conf
+RUN echo '        Options Indexes FollowSymLinks' >> /etc/apache2/sites-available/000-default.conf
+RUN echo '        AllowOverride All' >> /etc/apache2/sites-available/000-default.conf
+RUN echo '        Require all granted' >> /etc/apache2/sites-available/000-default.conf
+RUN echo '    </Directory>' >> /etc/apache2/sites-available/000-default.conf
+RUN echo '</VirtualHost>' >> /etc/apache2/sites-available/000-default.conf
 
 EXPOSE 8080
 
