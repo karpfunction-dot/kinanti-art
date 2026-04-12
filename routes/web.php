@@ -320,11 +320,16 @@ Route::middleware(['auth'])->group(function () {
 use Illuminate\Support\Facades\Artisan;
 
 Route::get('/terminal/{command}', function ($command) {
-    // Hanya izinkan perintah tertentu agar aman
     $allowedCommands = ['migrate', 'optimize:clear', 'key:generate', 'config:cache'];
     
     if (in_array($command, $allowedCommands)) {
-        Artisan::call($command);
+        // Tambahkan parameter --show khusus untuk key:generate
+        if ($command == 'key:generate') {
+            Artisan::call('key:generate', ['--show' => true]);
+        } else {
+            Artisan::call($command);
+        }
+        
         return "<pre>" . Artisan::output() . "</pre>";
     }
     
