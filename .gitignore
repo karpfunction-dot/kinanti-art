@@ -1,12 +1,9 @@
 ﻿/vendor/
 /node_modules/
 /.env
-/storage/*.log
-/storage/framework/cache/
-/storage/framework/sessions/
-/storage/framework/views/
+
 /.idea/
 /.vscode/
 .DS_Store
-Thumbs.db
+
 
