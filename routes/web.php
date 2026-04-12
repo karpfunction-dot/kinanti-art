@@ -339,9 +339,12 @@ Route::get('/terminal/{command}', function ($command) {
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/terminal/{command}', function ($command) {
-    // Jalankan link secara otomatis setiap kali rute ini dipanggil
-    Artisan::call('storage:link'); 
+Route::get('/terminal/fix-storage', function () {
+    // Hapus folder symlink yang lama (jika ada)
+    exec('rm -rf ' . public_path('storage'));
     
-    return "Storage link dijalankan. Output: " . Artisan::output();
+    // Buat ulang symlink
+    Artisan::call('storage:link');
+    
+    return "Storage link berhasil di-reset. Output: " . Artisan::output();
 });
