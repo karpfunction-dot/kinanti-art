@@ -335,3 +335,23 @@ Route::get('/terminal/{command}', function ($command) {
     
     return "Command tidak diizinkan.";
 });
+
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/terminal/{command}', function ($command) {
+    // Tambahkan storage:link ke daftar di bawah ini
+    $allowedCommands = ['migrate', 'optimize:clear', 'key:generate', 'config:cache', 'storage:link'];
+    
+    if (in_array($command, $allowedCommands)) {
+        if ($command == 'key:generate') {
+            Artisan::call('key:generate', ['--show' => true]);
+        } else {
+            Artisan::call($command);
+        }
+        
+        return "<pre>" . Artisan::output() . "</pre>";
+    }
+    
+    return "Command tidak diizinkan.";
+});
