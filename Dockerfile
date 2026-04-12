@@ -24,4 +24,4 @@ RUN chmod -R 775 storage bootstrap/cache
 RUN php artisan key:generate || true
 
 # Expose port (Railway pakai PORT)
-CMD php artisan config:clear && php artisan cache:clear && php artisan migrate --force
+CMD php artisan config:clear && php artisan cache:clear && php artisan key:generate && php artisan migrate --force; php artisan serve --host=0.0.0.0 --port=${PORT}
