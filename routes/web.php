@@ -317,3 +317,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/video/player/{id}', [VideoInventarisController::class, 'player'])->name('video.player');
 });
 
+Route::get('/migrate-now', function () {
+    Artisan::call('migrate', ['--force' => true]);
+    return Artisan::output();
+});
