@@ -317,7 +317,16 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/video/player/{id}', [VideoInventarisController::class, 'player'])->name('video.player');
 });
 
-Route::get('/migrate-now', function () {
-    Artisan::call('migrate', ['--force' => true]);
-    return Artisan::output();
+use Illuminate\Support\Facades\Artisan;
+
+Route::get('/terminal/{command}', function ($command) {
+    // Hanya izinkan perintah tertentu agar aman
+    $allowedCommands = ['migrate', 'optimize:clear', 'key:generate', 'config:cache'];
+    
+    if (in_array($command, $allowedCommands)) {
+        Artisan::call($command);
+        return "<pre>" . Artisan::output() . "</pre>";
+    }
+    
+    return "Command tidak diizinkan.";
 });
