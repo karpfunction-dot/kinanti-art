@@ -5,8 +5,6 @@
 /storage/framework/cache/
 /storage/framework/sessions/
 /storage/framework/views/
-
-/public/storage/
 /.idea/
 /.vscode/
 .DS_Store
