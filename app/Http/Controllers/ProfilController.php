@@ -62,24 +62,22 @@ class ProfilController extends Controller
                 'nama_lengkap' => $request->nama_lengkap,
                 'email' => $request->email,
             ];
+           use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+
             if ($request->hasFile('foto_profil')) {
-    $file = $request->file('foto_profil');
-    
-    // Ganti 'cloudinary://...' di bawah ini dengan isi CLOUDINARY_URL milikmu
-    $config = 'CLOUDINARY_URL=cloudinary://795513759742652:2q_9dz3FbYudYrcugCBwQAdBUvY@dxrnmtqie';
-
-    try {
-        $uploadedFileUrl = \CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary::upload($file->getRealPath(), [
-            'cloudinary_url' => $config, // Paksa baca config dari sini
-            'folder' => 'aradea_office/profiles',
-            'transformation' => ['width' => 400, 'height' => 400, 'crop' => 'limit']
-        ])->getSecurePath();
-
-        $updateData['foto_profil'] = $uploadedFileUrl;
-    } catch (\Exception $e) {
-        return redirect()->back()->with('error', 'Gagal upload: ' . $e->getMessage());
-    }
-}
+                $file = $request->file('foto_profil');
+            
+                $uploadedFileUrl = Cloudinary::upload($file->getRealPath(), [
+                    'folder' => 'aradea_office/profiles',
+                    'transformation' => [
+                        'width' => 400,
+                        'height' => 400,
+                        'crop' => 'limit'
+                    ]
+                ])->getSecurePath();
+            
+                $updateData['foto_profil'] = $uploadedFileUrl;
+            }
             DB::table('profil_anggota')->where('id_user', $id)->update($updateData);
             DB::table('users')->where('id_user', $id)->update(['id_role' => $request->id_role, 'aktif' => $request->aktif ?? 1]);
             DB::commit();
