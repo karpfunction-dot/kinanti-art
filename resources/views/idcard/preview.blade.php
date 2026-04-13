@@ -139,8 +139,8 @@ body {
 
 <!-- 🌿 Kartu Depan -->
 <div class="idcard front">
-  <img 
-  src="{{ !empty($foto_profil) ? $foto_profil : asset('assets/img/blank-profile.webp') }}" 
+ <img 
+  src="{{ !empty($member->foto_profil) ? $member->foto_profil : asset('assets/img/blank-profile.webp') }}" 
   alt="Foto" 
   class="photo"
   onerror="this.src='{{ asset('assets/img/blank-profile.webp') }}'"
