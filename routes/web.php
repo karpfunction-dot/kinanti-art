@@ -133,3 +133,12 @@ Route::post('/register', [RegisterController::class, 'register']);
 Route::fallback(function () {
     return redirect()->route('login');
 });
+Route::prefix('settings')->middleware('auth')->group(function () {
+
+    Route::get('/profil', [ProfilController::class, 'index'])->name('profil.index');
+
+    Route::get('/profil/{id}/edit', [ProfilController::class, 'edit'])->name('profil.edit');
+
+    Route::put('/profil/{id}', [ProfilController::class, 'update'])->name('profil.update');
+
+});
