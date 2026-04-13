@@ -139,9 +139,13 @@ body {
 
 <!-- 🌿 Kartu Depan -->
 <div class="idcard front">
-  <img src="{{ $member->foto_profil ?? asset('assets/img/blank-profile.webp') }}" 
-     class="profile-thumb" 
-     alt="Foto">  <div class="info">
+  <img 
+  src="{{ !empty($foto_profil) ? $foto_profil : asset('assets/img/blank-profile.webp') }}" 
+  alt="Foto" 
+  class="photo"
+  onerror="this.src='{{ asset('assets/img/blank-profile.webp') }}'"
+>
+  <div class="info">
     <p><strong>{{ $nama }}</strong></p>
     <p class="role">{{ $role }}</p>
   </div>
