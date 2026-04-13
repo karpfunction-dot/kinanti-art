@@ -317,3 +317,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/video/player/{id}', [VideoInventarisController::class, 'player'])->name('video.player');
 });
 
+Route::get('/cek-env', function () {
+    return [
+        'cloudinary_url_env' => env('CLOUDINARY_URL') ? 'TERDETEKSI (Aman)' : 'KOSONG (Error)',
+        'cloudinary_config' => config('cloudinary.cloudinary_url') ? 'TERBACA (Aman)' : 'TIDAK TERBACA (Error)',
+        'app_env' => app()->environment(),
+    ];
+});
