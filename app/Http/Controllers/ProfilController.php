@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class ProfilController extends Controller
 {
@@ -123,18 +124,19 @@ class ProfilController extends Controller
             
             // Handle foto upload
             if ($request->hasFile('foto_profil')) {
-                // Hapus foto lama
-                $oldFoto = DB::table('profil_anggota')->where('id_user', $id)->value('foto_profil');
-                if ($oldFoto && Storage::disk('public')->exists('foto_users/' . $oldFoto)) {
-                    Storage::disk('public')->delete('foto_users/' . $oldFoto);
-                }
-                
-                // Upload foto baru
-                $file = $request->file('foto_profil');
-                $filename = time() . '_' . $file->getClientOriginalName();
-                $file->storeAs('foto_users', $filename, 'public');
-                $updateData['foto_profil'] = $filename;
-            }
+
+    $file = $request->file('foto_profil')->getRealPath();
+
+    $result = Cloudinary::upload($file, [
+        'folder' => 'foto_users',
+        'public_id' => 'user_' . $id,
+        'overwrite' => true
+    ]);
+
+    $url = $result->getSecurePath();
+
+    $updateData['foto_profil'] = $url;
+}
             
             DB::table('profil_anggota')->where('id_user', $id)->update($updateData);
             
