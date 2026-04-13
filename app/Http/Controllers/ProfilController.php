@@ -62,7 +62,7 @@ class ProfilController extends Controller
                 'nama_lengkap' => $request->nama_lengkap,
                 'email' => $request->email,
             ];
-           use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+           
 
             if ($request->hasFile('foto_profil')) {
                 $file = $request->file('foto_profil');
