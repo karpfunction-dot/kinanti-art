@@ -73,9 +73,9 @@
                     <tr>
                         <td class="text-center">
                             @php
-                                $fotoPath = !empty($profile->foto_profil)
-        ? $profile->foto_profil
-        : asset('assets/img/blank-profile.webp');
+                                $fotoPath = !empty($member->foto_profil)
+                                    ? $member->foto_profil
+                                    : asset('assets/img/blank-profile.webp');
                             @endphp
                             <img src="{{ $fotoPath }}" class="profile-thumb" alt="Foto">
                         </td>
