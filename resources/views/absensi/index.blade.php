@@ -156,9 +156,12 @@
 <script>
 function confirmDelete(id) {
     if (confirm('Apakah Anda yakin ingin menghapus data absensi ini?')) {
-        // Ganti dengan route delete yang sesuai
-        // window.location.href = '/absensi/' + id + '/delete';
-        alert('Fitur hapus untuk ID: ' + id + ' sedang dalam pengembangan');
+        // Cari form tersembunyi tadi
+        let form = document.getElementById('delete-form');
+        // Set alamat tujuannya ke route destroy Laravel
+        form.action = '/absensi/' + id;
+        // Jalankan hapus!
+        form.submit();
     }
 }
 </script>
