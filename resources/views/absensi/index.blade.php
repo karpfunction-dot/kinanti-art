@@ -126,14 +126,12 @@
                                 $rowId = $row->id_absensi ?? $row->id_absen ?? $row->id ?? null;
                             @endphp
                             @if($rowId)
-                                <button class="btn btn-sm btn-outline-danger rounded-circle" style="width: 32px; height: 32px; border: none; background: rgba(220, 38, 38, 0.1);" onclick="confirmDelete('{{ $rowId }}')">
-                                    <i class="fa fa-trash-alt text-danger"></i>
-                                </button>
-                            @else
-                                <button class="btn btn-sm btn-outline-secondary rounded-circle" style="width: 32px; height: 32px; border: none; background: rgba(108, 117, 125, 0.1);" disabled>
-                                    <i class="fa fa-trash-alt text-secondary"></i>
-                                </button>
-                            @endif
+                                <button class="btn btn-sm btn-outline-danger rounded-circle" 
+                                    style="width: 32px; height: 32px; border: none; background: rgba(220, 38, 38, 0.1);" 
+                                    onclick="confirmDelete('{{ route('absensi.destroy', $rowId) }}')">
+                                <i class="fa fa-trash-alt text-danger"></i>
+                            </button>
+                        @endif
                         </td>
                     </tr>
                     @empty
@@ -153,14 +151,16 @@
     </div>
 </div>
 
+<form id="delete-form" action="" method="POST" style="display: none;">
+    @csrf
+    @method('DELETE')
+</form>
+
 <script>
-function confirmDelete(id) {
+function confirmDelete(deleteUrl) {
     if (confirm('Apakah Anda yakin ingin menghapus data absensi ini?')) {
-        // Cari form tersembunyi tadi
-        let form = document.getElementById('delete-form');
-        // Set alamat tujuannya ke route destroy Laravel
-        form.action = '/absensi/' + id;
-        // Jalankan hapus!
+        const form = document.getElementById('delete-form');
+        form.action = deleteUrl; // URL dari route('absensi.destroy') masuk ke sini
         form.submit();
     }
 }
