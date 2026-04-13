@@ -92,22 +92,17 @@
     @php
         $user = session('scanned_user');
         
-        // Tentukan path foto yang benar untuk Laravel
-        $fotoPath = asset('assets/img/blank-profile.webp'); // Default
+        // 1. Tentukan Foto Default
+        $fotoPath = asset('assets/img/blank-profile.webp'); 
         
         if (!empty($user['foto_profil'])) {
-            // Coba berbagai kemungkinan path
-            $possiblePaths = [
-                'storage/foto_users/' . $user['foto_profil'],
-                'storage/' . $user['foto_profil'],
-                'foto_users/' . $user['foto_profil'],
-            ];
-            
-            foreach ($possiblePaths as $path) {
-                if (file_exists(public_path($path))) {
-                    $fotoPath = asset($path);
-                    break;
-                }
+            // 2. Cek apakah ini URL Cloudinary (diawali http)
+            if (str_starts_with($user['foto_profil'], 'http')) {
+                $fotoPath = $user['foto_profil'];
+            } 
+            // 3. Jika bukan URL, cek di folder lokal (untuk masa transisi)
+            elseif (file_exists(public_path('storage/foto_users/' . $user['foto_profil']))) {
+                $fotoPath = asset('storage/foto_users/' . $user['foto_profil']);
             }
         }
     @endphp
