@@ -25,3 +25,9 @@ RUN php artisan key:generate || true
 
 # Expose port (Railway pakai PORT)
 CMD php artisan config:clear && php artisan config:cache && php artisan migrate --force || true; php artisan serve --host=0.0.0.0 --port=${PORT}
+
+# Generate APP_KEY (jika belum ada)
+RUN php artisan key:generate || true
+
+# Storage
+RUN php artisan storage:link || true
