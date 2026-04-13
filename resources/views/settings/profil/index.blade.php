@@ -83,11 +83,10 @@
                     @forelse($profiles as $profile)
                     <tr>
                         <td>
-                            @php
-                                $fotoPath = !empty($profile->foto_profil) && file_exists(public_path('storage/foto_users/' . $profile->foto_profil))
-                                    ? asset('storage/foto_users/' . $profile->foto_profil)
-                                    : asset('assets/img/blank-profile.webp');
-                            @endphp
+                           <img src="{{ $profile->foto_profil ?? asset('assets/img/blank-profile.webp') }}" 
+     id="fotoPreview" 
+     class="foto-preview" 
+     alt="Foto Profil">
                             <img src="{{ $fotoPath }}" class="profile-thumb" alt="foto">
                         </td>
                         <td>
