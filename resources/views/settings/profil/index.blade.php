@@ -84,10 +84,8 @@
                     <tr>
                         <td>
                            <img src="{{ $profile->foto_profil ?? asset('assets/img/blank-profile.webp') }}" 
-     id="fotoPreview" 
-     class="foto-preview" 
-     alt="Foto Profil">
-                            <img src="{{ $fotoPath }}" class="profile-thumb" alt="foto">
+     class="profile-thumb" 
+     alt="foto">
                         </td>
                         <td>
                             <div class="profile-name">{{ $profile->nama_lengkap ?? '-' }}</div>
