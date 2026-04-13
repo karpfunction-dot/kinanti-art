@@ -1,0 +1,33 @@
+/* =============================================================
+   🎨 KINANTI-THEME.CSS
+   Palet warna & elemen visual khas Kinanti’s Art Productions
+   ============================================================= */
+
+:root {
+  --color-primary: #166534;
+  --color-secondary: #a7f3d0;
+  --color-accent: #fce7f3;
+  --color-bg: #f9fafb;
+  --color-text: #14532d;
+  --radius-base: 10px;
+  --shadow-soft: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.btn {
+  padding: 8px 14px;
+  border-radius: var(--radius-base);
+  border: none;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.btn-primary { background: var(--color-primary); color: #fff; }
+.btn-primary:hover { background: #14532d; }
+
+.card {
+  background: #fff;
+  border-radius: var(--radius-base);
+  box-shadow: var(--shadow-soft);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}.

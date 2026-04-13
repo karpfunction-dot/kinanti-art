@@ -1,0 +1,25 @@
+/* =============================================================
+   🧾 FORM.CSS - Style untuk form & input
+   ============================================================= */
+
+input, select, textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+label {
+  font-weight: 600;
+  display: block;
+  margin-top: 12px;
+  color: var(--color-text);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(22,101,52,0.2);
+}
