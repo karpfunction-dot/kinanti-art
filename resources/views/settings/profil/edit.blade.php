@@ -46,11 +46,11 @@
                             <div class="form-group text-center">
                                 <label>Foto Profil</label>
                                 <div class="foto-wrapper">
-                                    @php
-                                        $fotoPath = !empty($profile->foto_profil) && file_exists(public_path('storage/foto_users/' . $profile->foto_profil))
-                                            ? asset('storage/foto_users/' . $profile->foto_profil)
-                                            : asset('assets/img/blank-profile.webp');
-                                    @endphp
+                                   @php
+    $fotoPath = !empty($profile->foto_profil)
+        ? $profile->foto_profil
+        : asset('assets/img/blank-profile.webp');
+@endphp
                                     <img src="{{ $fotoPath }}" id="fotoPreview" class="foto-preview" alt="Foto Profil">
                                     <input type="file" name="foto_profil" id="foto_profil" accept="image/*" onchange="previewImage(event)">
                                     <small class="form-text">Format: JPG, PNG, GIF (Max 2MB)</small>
