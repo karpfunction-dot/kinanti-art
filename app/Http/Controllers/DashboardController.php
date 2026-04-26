@@ -19,14 +19,33 @@ class DashboardController extends Controller
         $foto = $profil->foto_profil ?? 'https://ui-avatars.com/api/?name='.urlencode($nama);
 
         // --- DASHBOARD ADMIN & MANAJEMEN (Role 1 & 2) ---
-        if ($role_id == 1 || $role_id == 2) {
-            $total_siswa = DB::table('users')->where('id_role', 4)->count();
-            $total_pelatih = DB::table('users')->where('id_role', 3)->count();
-            $absensi_hari_ini = DB::table('absensi')->whereDate('tanggal', date('Y-m-d'))->count();
-            $data_kelas = DB::table('kelas')->get();
+if ($role_id == 1 || $role_id == 2) {
+    // Statistik Dasar
+    $total_siswa = DB::table('users')->where('id_role', 4)->count();
+    $total_pelatih = DB::table('users')->where('id_role', 3)->count();
+    $absensi_hari_ini = DB::table('absensi')->whereDate('tanggal', date('Y-m-d'))->count();
+    
+    // Ambil data kelas (Collection agar bisa pakai ->count())
+    $data_kelas = DB::table('kelas')->get();
 
-            return view('dashboard.admin', compact('total_siswa', 'total_pelatih', 'absensi_hari_ini', 'data_kelas', 'nama', 'foto'));
-        }
+    // Statistik Kehadiran Bulan Ini (Untuk bagian Izin, Hadir, Alfa)
+    $statistik = [
+        'hadir' => DB::table('absensi')->whereMonth('tanggal', date('m'))->where('status', 'Hadir')->count(),
+        'izin'  => DB::table('absensi')->whereMonth('tanggal', date('m'))->where('status', 'Izin')->count(),
+        'alfa'  => DB::table('absensi')->whereMonth('tanggal', date('m'))->where('status', 'Alfa')->count(),
+    ];
+
+    // Kirim semua variabel ke view dashboard.admin
+    return view('dashboard.admin', compact(
+        'total_siswa', 
+        'total_pelatih', 
+        'absensi_hari_ini', 
+        'data_kelas', 
+        'nama', 
+        'foto', 
+        'statistik'
+    ));
+}
 
         // --- DASHBOARD PELATIH (Role 3 - Nabila) ---
         elseif ($role_id == 3) {
