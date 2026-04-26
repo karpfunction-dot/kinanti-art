@@ -4,7 +4,6 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    <!-- Header Section -->
     <div class="row mb-4 align-items-center">
         <div class="col-md-8">
             <div class="d-flex align-items-center gap-3">
@@ -24,7 +23,6 @@
         </div>
     </div>
 
-    <!-- Filter Card -->
     <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px; background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);">
         <div class="card-body p-4">
             <form method="get" action="{{ route('absensi.index') }}" class="row g-4">
@@ -54,7 +52,6 @@
         </div>
     </div>
 
-    <!-- Table Card -->
     <div class="card border-0 shadow-sm" style="border-radius: 20px; overflow: hidden;">
         <div class="card-header bg-white py-3 border-0 px-4">
             <div class="d-flex justify-content-between align-items-center">
@@ -62,7 +59,7 @@
                     <i class="fa fa-users text-success me-2"></i> Data Kehadiran
                 </h5>
                 <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill">
-                    <i class="fa fa-check-circle me-1"></i> Total: {{ $rows->count() }} Anggota
+                    <i class="fa fa-check-circle me-1"></i> Total: {{ $rows->total() }} Data
                 </span>
             </div>
         </div>
@@ -81,15 +78,15 @@
                 <tbody>
                     @forelse($rows as $no => $row)
                     <tr style="border-bottom: 1px solid #f0f0f0;">
-                        <td class="ps-4 fw-bold text-muted">{{ $no + 1 }}</td>
+                        <td class="ps-4 fw-bold text-muted">{{ ($rows->currentPage() - 1) * $rows->perPage() + $no + 1 }}</td>
                         <td>
                             <div class="d-flex align-items-center gap-2">
                                 <div class="rounded-circle bg-success bg-opacity-10 p-2" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
                                     <i class="fa fa-user text-success small"></i>
                                 </div>
                                 <div>
-                                    <div class="fw-semibold text-dark">{{ $row->nama_lengkap ?? $row->nama ?? '-' }}</div>
-                                    <div class="small text-muted" style="font-size: 0.7rem;">{{ $row->kode_barcode ?? $row->kode_anggota ?? '-' }}</div>
+                                    <div class="fw-semibold text-dark">{{ $row->nama_lengkap ?? '-' }}</div>
+                                    <div class="small text-muted" style="font-size: 0.7rem;">{{ $row->kode_barcode ?? '-' }}</div>
                                 </div>
                             </div>
                         </td>
@@ -101,7 +98,7 @@
                                     'manajemen' => ['bg' => 'warning', 'text' => 'dark'],
                                     'admin' => ['bg' => 'danger', 'text' => 'white'],
                                 ];
-                                $role = strtolower($row->role_name ?? $row->peran ?? '-');
+                                $role = strtolower($row->role_name ?? '-');
                                 $color = $roleColors[$role] ?? ['bg' => 'secondary', 'text' => 'white'];
                             @endphp
                             <span class="badge bg-{{ $color['bg'] }} bg-opacity-10 text-{{ $color['text'] }} px-3 py-2 rounded-pill" style="font-weight: 500;">
@@ -122,16 +119,20 @@
                         </td>
                         <td class="text-center">
                             @php
-                                // Gunakan id_absensi atau id sesuai dengan struktur database
-                                $rowId = $row->id_absensi ?? $row->id_absen ?? $row->id ?? null;
+                                $rowId = $row->id_absensi ?? null;
+                                $currentUserRole = strtolower(Auth::user()->role->nama_role ?? '');
                             @endphp
-                            @if($rowId)
+                            
+                            {{-- TOMBOL HAPUS HANYA UNTUK ADMIN --}}
+                            @if($currentUserRole === 'admin' && $rowId)
                                 <button class="btn btn-sm btn-outline-danger rounded-circle" 
-                                    style="width: 32px; height: 32px; border: none; background: rgba(220, 38, 38, 0.1);" 
-                                    onclick="confirmDelete('{{ route('absensi.destroy', $rowId) }}')">
-                                <i class="fa fa-trash-alt text-danger"></i>
-                            </button>
-                        @endif
+                                        style="width: 32px; height: 32px; border: none; background: rgba(220, 38, 38, 0.1);" 
+                                        onclick="confirmDelete('{{ route('absensi.destroy', $rowId) }}')">
+                                    <i class="fa fa-trash-alt text-danger"></i>
+                                </button>
+                            @else
+                                <span class="text-muted small italic" style="font-size: 0.7rem;">-</span>
+                            @endif
                         </td>
                     </tr>
                     @empty
@@ -148,6 +149,12 @@
                 </tbody>
             </table>
         </div>
+        
+        @if($rows->hasPages())
+        <div class="card-footer bg-white border-0 py-3">
+            {{ $rows->appends(request()->query())->links() }}
+        </div>
+        @endif
     </div>
 </div>
 
@@ -158,9 +165,9 @@
 
 <script>
 function confirmDelete(deleteUrl) {
-    if (confirm('Apakah Anda yakin ingin menghapus data absensi ini?')) {
+    if (confirm('Apakah Anda yakin ingin menghapus data absensi ini? Tindakan ini tidak dapat dibatalkan.')) {
         const form = document.getElementById('delete-form');
-        form.action = deleteUrl; // URL dari route('absensi.destroy') masuk ke sini
+        form.action = deleteUrl;
         form.submit();
     }
 }

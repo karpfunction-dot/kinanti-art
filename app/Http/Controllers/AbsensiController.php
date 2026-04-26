@@ -215,14 +215,27 @@ class AbsensiController extends Controller
     }
 
     public function destroy($id)
-    {
-        try {
-            DB::table('absensi')->where('id_absensi', $id)->delete();
-            return redirect()->route('absensi.index')->with('success', '✅ Data dihapus.');
-        } catch (\Exception $e) {
-            return redirect()->route('absensi.index')->with('error', '❌ Gagal: ' . $e->getMessage());
+{
+    try {
+        // --- TAMBAHKAN PENGECEKAN INI ---
+        $currentUserRole = strtolower(auth()->user()->role->nama_role ?? '');
+
+        if ($currentUserRole !== 'admin') {
+            return redirect()->route('absensi.index')
+                ->with('error', '🚫 Akses Ditolak! Hanya Admin yang memiliki wewenang untuk menghapus data absensi.');
         }
+        // --------------------------------
+
+        DB::table('absensi')->where('id_absensi', $id)->delete();
+        
+        return redirect()->route('absensi.index')
+            ->with('success', '✅ Data absensi berhasil dihapus.');
+            
+    } catch (\Exception $e) {
+        return redirect()->route('absensi.index')
+            ->with('error', '❌ Gagal menghapus data: ' . $e->getMessage());
     }
+}
 
     public function export(Request $request)
     {
