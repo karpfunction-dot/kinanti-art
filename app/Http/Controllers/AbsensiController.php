@@ -211,28 +211,38 @@ class AbsensiController extends Controller
      * Menampilkan daftar siswa per kelas untuk absen manual.
      */
     public function inputKelas($id_kelas)
-    {
-        $kelas = DB::table('kelas')->where('id_kelas', $id_kelas)->first();
-        if (!$kelas) {
-            return redirect()->back()->with('error', 'Kelas tidak ditemukan.');
-        }
-
-        $siswas = DB::table('pendaftaran_kelas as pk')
-            ->join('users as u', 'pk.id_user', '=', 'u.id_user')
-            ->join('profil_anggota as p', 'u.id_user', '=', 'p.id_user')
-            ->leftJoin('roles as r', 'u.id_role', '=', 'r.id_role')
-            ->where('pk.id_kelas', $id_kelas)
-            ->select('u.id_user', 'u.kode_barcode', 'p.nama_lengkap', 'p.foto_profil', 'r.nama_role')
-            ->get();
-
-        $absensi_hari_ini = DB::table('absensi')
-            ->where('id_kelas', $id_kelas)
-            ->whereDate('tanggal', date('Y-m-d'))
-            ->pluck('status', 'id_user')
-            ->toArray();
-
-        return view('absensi.input_massal', compact('siswas', 'kelas', 'absensi_hari_ini'));
+{
+    // Mengambil info kelas
+    $kelas = DB::table('kelas')->where('id_kelas', $id_kelas)->first();
+    if (!$kelas) {
+        return redirect()->route('absensi.pilih_kelas')->with('error', 'Kelas tidak ditemukan.');
     }
+
+    // QUERY DIPERBAIKI: Menggunakan tabel 'kelas_siswa' sesuai database Anda
+    $siswas = DB::table('kelas_siswa as ks')
+        ->join('users as u', 'ks.id_user', '=', 'u.id_user')
+        ->join('profil_anggota as p', 'u.id_user', '=', 'p.id_user')
+        ->leftJoin('roles as r', 'u.id_role', '=', 'r.id_role')
+        ->where('ks.id_kelas', $id_kelas)
+        ->where('ks.aktif', 1) // Hanya siswa yang aktif di kelas tersebut
+        ->select('u.id_user', 'u.kode_barcode', 'p.nama_lengkap', 'p.foto_profil', 'r.nama_role')
+        ->get();
+
+    $absensi_hari_ini = DB::table('absensi')
+        ->where('id_kelas', $id_kelas)
+        ->whereDate('tanggal', date('Y-m-d'))
+        ->pluck('status', 'id_user')
+        ->toArray();
+
+    return view('absensi.input_massal', compact('siswas', 'kelas', 'absensi_hari_ini'));
+}
+
+// Tambahkan fungsi ini untuk halaman khusus pilih kelas
+public function pilihKelas()
+{
+    $kelas = DB::table('kelas')->where('aktif', 1)->get();
+    return view('absensi.pilih_kelas', compact('kelas'));
+}
 
     /**
      * Menyimpan data absensi massal.

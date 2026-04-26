@@ -359,3 +359,4 @@ Route::get('/cek-env', function () {
 });
 
 Route::get('/debug-role', [AbsensiController::class, 'debugRole'])->middleware('auth');
+Route::get('/absensi/pilih-kelas', [AbsensiController::class, 'pilihKelas'])->name('absensi.pilih_kelas');
