@@ -61,12 +61,12 @@ class AuthController extends Controller
         
         // Role 4 (Siswa) -> Masuk Area Siswa
         elseif ($role_id == 4) {
-            return redirect('/siswa/area');
+            return redirect('/dashboard');
         } 
         
         // Role 3 (Pelatih) -> Masuk Area Pelatih
         elseif ($role_id == 3) {
-            return redirect('/pelatih/jadwal');
+            return redirect('/dashboard');
         } 
         
         // Default
