@@ -195,93 +195,98 @@ class AbsensiController extends Controller
      */
 public function prosesApi(Request $request)
 {
+    // Debug: Log semua request
+    \Log::info('API Request received', [
+        'method' => $request->method(),
+        'path' => $request->path(),
+        'headers' => $request->headers->all(),
+        'content' => $request->getContent()
+    ]);
+    
     try {
-        $request->validate([
-            'kode_barcode' => 'required|string|min:3'
+        // Validasi input
+        $validator = validator($request->all(), [
+            'kode_barcode' => 'required|string|min:1|max:50'
         ]);
         
-        $barcode = trim($request->kode_barcode);
-        $currentUser = auth()->user();
-        
-        // =============================================================
-        // CEK AKSES - FLEKSIBEL UNTUK BERBAGAI STRUKTUR DATABASE
-        // =============================================================
-        
-        // 1. Cek apakah user login
-        if (!$currentUser) {
+        if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Anda belum login. Silakan login terlebih dahulu.'
+                'message' => 'Validasi gagal: ' . implode(', ', $validator->errors()->all())
+            ], 422);
+        }
+        
+        $barcode = trim($request->kode_barcode);
+        
+        // Cek autentikasi
+        if (!auth()->check()) {
+            \Log::warning('Unauthorized access to prosesApi');
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda harus login terlebih dahulu.'
             ], 401);
         }
         
-        // 2. Ambil role dari berbagai kemungkinan sumber
+        $currentUser = auth()->user();
+        
+        // Ambil role user dengan aman
         $userRole = null;
         
-        // Coba dari property langsung (string)
-        if (isset($currentUser->role) && is_string($currentUser->role) && !empty($currentUser->role)) {
+        // Method 1: Langsung dari property
+        if (isset($currentUser->role)) {
             $userRole = $currentUser->role;
         }
         
-        // Coba dari atribut model (string)
-        $attrs = $currentUser->getAttributes();
-        if (isset($attrs['role']) && is_string($attrs['role']) && !empty($attrs['role'])) {
-            $userRole = $attrs['role'];
+        // Method 2: Dari atribut model
+        if (empty($userRole) && method_exists($currentUser, 'getAttributes')) {
+            $attrs = $currentUser->getAttributes();
+            $userRole = $attrs['role'] ?? null;
         }
         
-        // Coba dari tabel roles - AMBIL HANYA NAMANYA (STRING)
-        if (!$userRole) {
-            $roleData = DB::table('users as u')
-                ->leftJoin('roles as r', 'u.id_role', '=', 'r.id_role')
-                ->where('u.id_user', $currentUser->id_user)
-                ->select('r.nama_role')
-                ->first();
-            
-            // 🔥 PERBAIKAN: Ambil nama_role sebagai string
-            if ($roleData && isset($roleData->nama_role)) {
-                $userRole = $roleData->nama_role;
+        // Method 3: Dari tabel roles
+        if (empty($userRole)) {
+            try {
+                $roleName = DB::table('users as u')
+                    ->leftJoin('roles as r', 'u.id_role', '=', 'r.id_role')
+                    ->where('u.id_user', $currentUser->id_user)
+                    ->value('r.nama_role');
+                
+                if ($roleName) {
+                    $userRole = $roleName;
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Could not fetch role from roles table: ' . $e->getMessage());
             }
         }
         
-        // 3. Jika masih object (kasus Anda), extract nama_role
-        if (is_object($userRole) && isset($userRole->nama_role)) {
-            $userRole = $userRole->nama_role;
+        // Cleanup: Jika role masih object, ekstrak string
+        if (is_object($userRole)) {
+            $userRole = $userRole->nama_role ?? json_encode($userRole);
+        }
+        if (is_array($userRole)) {
+            $userRole = $userRole['nama_role'] ?? implode(',', $userRole);
         }
         
-        // 4. Jika masih array, extract
-        if (is_array($userRole) && isset($userRole['nama_role'])) {
-            $userRole = $userRole['nama_role'];
-        }
+        // Convert ke string dan lowercase
+        $userRole = trim(strtolower((string)$userRole));
         
-        // 5. Log untuk debugging
-        \Log::info('Proses API - User Role Check', [
+        \Log::info('User role detected', [
             'user_id' => $currentUser->id_user,
-            'email' => $currentUser->email,
-            'role_found_type' => gettype($userRole),
-            'role_found_value' => $userRole
+            'email' => $currentUser->email ?? 'unknown',
+            'role' => $userRole
         ]);
         
-        // 6. Role yang diizinkan
+        // Cek role yang diizinkan
         $allowedRoles = ['admin', 'pelatih', 'manajemen', 'owner', 'superadmin'];
-        $userRoleLower = strtolower(trim((string)$userRole ?? ''));
         
-        // 7. Jika role tidak ditemukan atau tidak diizinkan
-        if (empty($userRoleLower) || !in_array($userRoleLower, $allowedRoles)) {
+        if (!in_array($userRole, $allowedRoles)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Akses ditolak! Role Anda: "' . ($userRole ?? 'tidak terdeteksi') . '". Diperlukan: admin/pelatih/manajemen.',
-                'debug' => [
-                    'user_role_detected' => $userRole,
-                    'user_role_type' => gettype($userRole),
-                    'user_id' => $currentUser->id_user,
-                    'email' => $currentUser->email
-                ]
+                'message' => 'Akses ditolak! Role Anda: "' . $userRole . '". Diperlukan: admin/pelatih/manajemen.'
             ], 403);
         }
         
-        // =============================================================
-        // CARI USER BERDASARKAN BARCODE
-        // =============================================================
+        // Cari user berdasarkan barcode
         $user = DB::table('users as u')
             ->leftJoin('profil_anggota as p', 'u.id_user', '=', 'p.id_user')
             ->leftJoin('roles as r', 'u.id_role', '=', 'r.id_role')
@@ -289,9 +294,8 @@ public function prosesApi(Request $request)
             ->select(
                 'u.id_user', 
                 'u.kode_barcode',
-                'u.email',
                 DB::raw('COALESCE(r.nama_role, u.role, "Member") as role'),
-                DB::raw('COALESCE(p.nama_lengkap, u.name, u.nama, "Tidak diketahui") as nama_lengkap'),
+                DB::raw('COALESCE(p.nama_lengkap, u.name, "Tidak diketahui") as nama_lengkap'),
                 'p.foto_profil'
             )
             ->first();
@@ -300,13 +304,11 @@ public function prosesApi(Request $request)
             \Log::warning('Barcode not found', ['barcode' => $barcode]);
             return response()->json([
                 'success' => false,
-                'message' => "Barcode '{$barcode}' tidak ditemukan di sistem."
+                'message' => "Barcode '{$barcode}' tidak ditemukan."
             ], 404);
         }
         
-        // =============================================================
-        // CEK ABSENSI GANDA
-        // =============================================================
+        // Cek absen hari ini
         $sudahAbsen = DB::table('absensi')
             ->where('id_user', $user->id_user)
             ->whereDate('tanggal', date('Y-m-d'))
@@ -326,52 +328,36 @@ public function prosesApi(Request $request)
             ], 409);
         }
         
-        // =============================================================
-        // SIMPAN ABSENSI
-        // =============================================================
-        // Pastikan role untuk kategori adalah string
+        // Simpan absensi
         $userRoleForCategory = is_object($user->role) ? ($user->role->nama_role ?? 'siswa') : $user->role;
         $kategori = in_array(strtolower($userRoleForCategory), ['pelatih', 'manajemen', 'admin', 'owner', 'superadmin']) 
             ? 'Pelatih' 
             : 'Siswa';
         
-        $waktuNow = date('Y-m-d H:i:s');
-        $tanggalNow = date('Y-m-d');
-        $timeNow = date('H:i:s');
-        
-        $attendanceId = DB::table('absensi')->insertGetId([
+        DB::table('absensi')->insert([
             'id_user' => $user->id_user,
             'kode_barcode' => $barcode,
-            'tanggal' => $tanggalNow,
-            'waktu' => $timeNow,
+            'tanggal' => date('Y-m-d'),
+            'waktu' => date('H:i:s'),
             'status' => 'Hadir',
             'kategori' => $kategori,
             'lokasi' => 'Studio',
             'keterangan' => "Absen via scanner: {$user->nama_lengkap}",
             'status_absen' => 'tercatat',
-            'created_at' => $waktuNow,
+            'created_at' => now(),
             'scanned_by' => $currentUser->id_user,
         ]);
-        
-        \Log::info('Attendance recorded', [
-            'attendance_id' => $attendanceId,
-            'user_id' => $user->id_user,
-            'scanned_by' => $currentUser->id_user
-        ]);
-        
-        // Format user untuk response (pastikan role string)
-        $userResponse = [
-            'nama_lengkap' => $user->nama_lengkap,
-            'role' => is_object($user->role) ? ($user->role->nama_role ?? 'Member') : $user->role,
-            'kode_barcode' => $user->kode_barcode,
-            'foto_profil' => $user->foto_profil,
-            'sudah_absen' => false
-        ];
         
         return response()->json([
             'success' => true,
             'message' => '✅ Absensi berhasil untuk ' . $user->nama_lengkap,
-            'user' => $userResponse
+            'user' => [
+                'nama_lengkap' => $user->nama_lengkap,
+                'role' => is_object($user->role) ? ($user->role->nama_role ?? 'Member') : $user->role,
+                'kode_barcode' => $user->kode_barcode,
+                'foto_profil' => $user->foto_profil,
+                'sudah_absen' => false
+            ]
         ]);
         
     } catch (\Illuminate\Validation\ValidationException $e) {
@@ -380,14 +366,16 @@ public function prosesApi(Request $request)
             'message' => 'Validasi gagal: ' . implode(', ', $e->errors())
         ], 422);
     } catch (\Exception $e) {
-        \Log::error('API Scan error: ' . $e->getMessage(), [
-            'trace' => $e->getTraceAsString(),
-            'request' => $request->all()
+        // Log error detail
+        \Log::error('API Scan critical error: ' . $e->getMessage(), [
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString()
         ]);
         
         return response()->json([
             'success' => false,
-            'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+            'message' => 'Error: ' . $e->getMessage()
         ], 500);
     }
 }
