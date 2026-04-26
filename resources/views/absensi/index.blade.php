@@ -17,37 +17,41 @@
             </div>
         </div>
         <div class="col-md-4 text-md-end mt-3 mt-md-0">
-            <a href="{{ route('absensi.scan') }}" class="btn btn-primary px-4 py-2 shadow-sm" style="background: linear-gradient(135deg, #0f3b2c 0%, #1a5d45 100%); border-radius: 12px; border: none; font-weight: 600;">
-                <i class="fa fa-qrcode me-2"></i> Mulai Scan Barcode
-            </a>
+            <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end">
+                <a href="{{ route('absensi.scan') }}" class="btn btn-primary px-4 py-2 shadow-sm" style="background: linear-gradient(135deg, #0f3b2c 0%, #1a5d45 100%); border-radius: 12px; border: none; font-weight: 600;">
+                    <i class="fa fa-qrcode me-2"></i> Scan Barcode
+                </a>
+            </div>
         </div>
     </div>
 
-    <div class="d-flex flex-wrap gap-2 mb-4">
-    <a href="{{ route('absensi.scan') }}" class="btn btn-dark rounded-pill px-4">
-        <i class="fa fa-qrcode me-2"></i> Scan Barcode
-    </a>
-
-    <div class="dropdown">
-        <button class="btn btn-primary rounded-pill px-4 dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fa fa-edit me-2"></i> Input Absensi Kelas
-        </button>
-        <ul class="dropdown-menu shadow border-0" aria-labelledby="dropdownMenuButton1" style="border-radius: 15px;">
-            <li class="dropdown-header text-uppercase small fw-bold">Pilih Kelas</li>
-            @php
-                // Ambil daftar kelas langsung dari DB untuk dropdown cepat
-                $list_kelas = DB::table('kelas')->get();
-            @endphp
-            @foreach($list_kelas as $k)
-                <li>
-                    <a class="dropdown-item py-2" href="{{ route('absensi.kelas', $k->id_kelas) }}">
-                        <i class="fa fa-chevron-right me-2 text-primary" style="font-size: 10px;"></i> {{ $k->nama_kelas }}
-                    </a>
-                </li>
-            @endforeach
-        </ul>
+    <div class="mb-4">
+        <div class="dropdown">
+            <button class="btn btn-white shadow-sm border-0 px-4 py-3 dropdown-toggle w-100 w-md-auto text-start" type="button" id="btnInputKelas" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius: 15px; font-weight: 600; color: #0f3b2c;">
+                <i class="fa fa-edit text-success me-2"></i> Input Absensi Per Kelas (H/I/S/A)
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2 mt-2" aria-labelledby="btnInputKelas" style="border-radius: 15px; min-width: 250px;">
+                <li class="dropdown-header text-uppercase small fw-bold text-muted pb-2">Pilih Kelas Latihan</li>
+                @php
+                    $list_kelas = DB::table('kelas')->get();
+                @endphp
+                @forelse($list_kelas as $k)
+                    <li>
+                        <a class="dropdown-item py-2 px-3 rounded-3" href="{{ route('absensi.kelas', $k->id_kelas) }}">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-success bg-opacity-10 rounded p-1 me-2">
+                                    <i class="fa fa-chevron-right text-success small"></i>
+                                </div>
+                                <span>{{ $k->nama_kelas }}</span>
+                            </div>
+                        </a>
+                    </li>
+                @empty
+                    <li><span class="dropdown-item disabled text-muted">Belum ada data kelas</span></li>
+                @endforelse
+            </ul>
+        </div>
     </div>
-</div>
 
     <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px; background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);">
         <div class="card-body p-4">
@@ -82,7 +86,7 @@
         <div class="card-header bg-white py-3 border-0 px-4">
             <div class="d-flex justify-content-between align-items-center">
                 <h5 class="mb-0 fw-bold text-dark">
-                    <i class="fa fa-users text-success me-2"></i> Data Kehadiran
+                    <i class="fa fa-users text-success me-2"></i> Riwayat Kehadiran
                 </h5>
                 <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill">
                     <i class="fa fa-check-circle me-1"></i> Total: {{ $rows->total() }} Data
@@ -138,8 +142,15 @@
                             <div class="small text-muted">{{ $row->waktu ?? '-' }} WIB</div>
                         </td>
                         <td>
-                            <span class="badge {{ isset($row->status) && strtolower($row->status) == 'hadir' ? 'bg-success' : 'bg-secondary' }} px-3 py-2 rounded-pill" style="font-weight: 500;">
-                                <i class="fa {{ (isset($row->status) && strtolower($row->status) == 'hadir') ? 'fa-check-circle' : 'fa-clock' }} me-1 small"></i>
+                            @php
+                                $status = strtolower($row->status ?? '');
+                                $statusBadge = 'bg-secondary';
+                                if($status == 'hadir') $statusBadge = 'bg-success';
+                                elseif($status == 'izin') $statusBadge = 'bg-warning';
+                                elseif($status == 'sakit') $statusBadge = 'bg-info';
+                                elseif($status == 'alfa' || $status == 'alpa') $statusBadge = 'bg-danger';
+                            @endphp
+                            <span class="badge {{ $statusBadge }} px-3 py-2 rounded-pill" style="font-weight: 500;">
                                 {{ ucfirst($row->status ?? 'Tidak Hadir') }}
                             </span>
                         </td>
@@ -149,7 +160,6 @@
                                 $currentUserRole = strtolower(Auth::user()->role->nama_role ?? '');
                             @endphp
                             
-                            {{-- TOMBOL HAPUS HANYA UNTUK ADMIN --}}
                             @if($currentUserRole === 'admin' && $rowId)
                                 <button class="btn btn-sm btn-outline-danger rounded-circle" 
                                         style="width: 32px; height: 32px; border: none; background: rgba(220, 38, 38, 0.1);" 
@@ -167,7 +177,7 @@
                             <div class="text-muted">
                                 <i class="fa fa-inbox fa-3x mb-3 opacity-25"></i>
                                 <p class="mb-0">Belum ada data absensi periode ini.</p>
-                                <small class="text-muted">Silakan scan barcode anggota untuk mencatat kehadiran.</small>
+                                <small class="text-muted">Silakan scan barcode atau input manual per kelas.</small>
                             </div>
                         </td>
                     </tr>
@@ -191,11 +201,26 @@
 
 <script>
 function confirmDelete(deleteUrl) {
-    if (confirm('Apakah Anda yakin ingin menghapus data absensi ini? Tindakan ini tidak dapat dibatalkan.')) {
+    if (confirm('Apakah Anda yakin ingin menghapus data absensi ini?')) {
         const form = document.getElementById('delete-form');
         form.action = deleteUrl;
         form.submit();
     }
 }
 </script>
+
+<style>
+    /* Styling khusus untuk mempercantik dropdown */
+    .dropdown-item:hover {
+        background-color: #f0fdf4 !important;
+        color: #0f3b2c !important;
+    }
+    .btn-white {
+        background: white;
+        border: 1px solid #f1f5f9;
+    }
+    .btn-white:hover {
+        background: #f8fafc;
+    }
+</style>
 @endsection
