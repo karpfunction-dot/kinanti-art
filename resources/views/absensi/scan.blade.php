@@ -368,7 +368,7 @@ async function processBarcode(barcode) {
     showProcessingIndicator(true);
     
     try {
-        const response = await fetch('{{ route("absensi.proses.api") }}', {
+        const response = await fetch('{{ url("/absensi/proses-api") }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
