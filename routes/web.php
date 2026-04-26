@@ -10,7 +10,7 @@ use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\TugasWewenangController;
 use App\Http\Controllers\IdCardController;
 use App\Http\Controllers\DashboardController;
-
+use Illuminate\Support\Facades\Artisan;
 // =============================================================
 // HALAMAN PUBLIK
 // =============================================================
@@ -73,16 +73,39 @@ Route::middleware('auth')->group(function () {
         return view('pages.sedang_dibuat', ['judul' => 'Pendaftaran Siswa']);
     });
 
-    // =============================================================
-    // MANAJEMEN ABSENSI
-    // =============================================================
-    Route::prefix('absensi')->group(function () {
-        Route::get('/', [AbsensiController::class, 'index'])->name('absensi.index');
-        Route::get('/scan', [AbsensiController::class, 'scan'])->name('absensi.scan');
-        Route::post('/proses', [AbsensiController::class, 'proses'])->name('absensi.proses');
-        Route::delete('/{id}', [AbsensiController::class, 'destroy'])->name('absensi.destroy');
-    });
+// =============================================================
+// MANAJEMEN ABSENSI
+// =============================================================
+Route::prefix('absensi')->group(function () {
+    Route::get('/', [AbsensiController::class, 'index'])->name('absensi.index');
+    Route::get('/scan', [AbsensiController::class, 'scan'])->name('absensi.scan');
+    Route::post('/proses', [AbsensiController::class, 'proses'])->name('absensi.proses');
+    Route::post('/proses-api', [AbsensiController::class, 'prosesApi'])->name('absensi.proses.api');
+    Route::delete('/{id}', [AbsensiController::class, 'destroy'])->name('absensi.destroy');
+});
 
+// =============================================================
+// CLEAR CACHE ROUTE (Emergency)
+// =============================================================
+Route::get('/clear-cache', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('route:clear');
+        \Illuminate\Support\Facades\Artisan::call('config:clear');
+        \Illuminate\Support\Facades\Artisan::call('cache:clear');
+        \Illuminate\Support\Facades\Artisan::call('view:clear');
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'All cache cleared successfully!',
+            'output' => \Illuminate\Support\Facades\Artisan::output()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
+    }
+});
     // =============================================================
     // LAPORAN ABSENSI
     // =============================================================
@@ -317,3 +340,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/video/player/{id}', [VideoInventarisController::class, 'player'])->name('video.player');
 });
 
+Route::get('/cek-env', function () {
+    return [
+        'cloudinary_url_env' => env('CLOUDINARY_URL') ? 'TERDETEKSI (Aman)' : 'KOSONG (Error)',
+        'cloudinary_config' => config('cloudinary.cloudinary_url') ? 'TERBACA (Aman)' : 'TIDAK TERBACA (Error)',
+        'app_env' => app()->environment(),
+    ];
+});
+
+Route::get('/debug-role', [AbsensiController::class, 'debugRole'])->middleware('auth');

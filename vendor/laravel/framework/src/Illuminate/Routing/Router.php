@@ -323,20 +323,6 @@ class Router implements BindingRegistrar, RegistrarContract
     }
 
     /**
-     * Register an array of resource controllers that can be soft deleted.
-     *
-     * @param  array  $resources
-     * @param  array  $options
-     * @return void
-     */
-    public function softDeletableResources(array $resources, array $options = [])
-    {
-        foreach ($resources as $name => $controller) {
-            $this->resource($name, $controller, $options)->withTrashed();
-        }
-    }
-
-    /**
      * Route a resource to a controller.
      *
      * @param  string  $name
@@ -509,7 +495,7 @@ class Router implements BindingRegistrar, RegistrarContract
      */
     public function mergeWithLastGroup($new, $prependExistingPrefix = true)
     {
-        return RouteGroup::merge($new, array_last($this->groupStack), $prependExistingPrefix);
+        return RouteGroup::merge($new, end($this->groupStack), $prependExistingPrefix);
     }
 
     /**
@@ -535,7 +521,7 @@ class Router implements BindingRegistrar, RegistrarContract
     public function getLastGroupPrefix()
     {
         if ($this->hasGroupStack()) {
-            $last = array_last($this->groupStack);
+            $last = end($this->groupStack);
 
             return $last['prefix'] ?? '';
         }
@@ -640,7 +626,7 @@ class Router implements BindingRegistrar, RegistrarContract
      */
     protected function prependGroupNamespace($class)
     {
-        $group = array_last($this->groupStack);
+        $group = end($this->groupStack);
 
         return isset($group['namespace']) && ! str_starts_with($class, '\\') && ! str_starts_with($class, $group['namespace'])
             ? $group['namespace'].'\\'.$class
@@ -655,7 +641,7 @@ class Router implements BindingRegistrar, RegistrarContract
      */
     protected function prependGroupController($class)
     {
-        $group = array_last($this->groupStack);
+        $group = end($this->groupStack);
 
         if (! isset($group['controller'])) {
             return $class;
@@ -851,9 +837,9 @@ class Router implements BindingRegistrar, RegistrarContract
                 ->values()
                 ->all();
 
-        $middleware = (new Collection($middleware))
-            ->map(fn ($name) => (array) MiddlewareNameResolver::resolve($name, $this->middleware, $this->middlewareGroups))
-            ->flatten()
+        $middleware = (new Collection($middleware))->map(function ($name) {
+            return (array) MiddlewareNameResolver::resolve($name, $this->middleware, $this->middlewareGroups);
+        })->flatten()
             ->when(
                 ! empty($excluded),
                 fn ($collection) => $collection->reject(function ($name) use ($excluded) {
@@ -875,8 +861,7 @@ class Router implements BindingRegistrar, RegistrarContract
                         fn ($exclude) => class_exists($exclude) && $reflection->isSubclassOf($exclude)
                     );
                 })
-            )
-            ->values();
+            )->values();
 
         return $this->sortMiddleware($middleware);
     }
@@ -1514,10 +1499,6 @@ class Router implements BindingRegistrar, RegistrarContract
 
         if ($method === 'middleware') {
             return (new RouteRegistrar($this))->attribute($method, is_array($parameters[0]) ? $parameters[0] : $parameters);
-        }
-
-        if ($method === 'can') {
-            return (new RouteRegistrar($this))->attribute($method, [$parameters]);
         }
 
         if ($method !== 'where' && Str::startsWith($method, 'where')) {

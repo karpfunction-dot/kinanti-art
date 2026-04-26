@@ -15,7 +15,6 @@ use Symfony\Component\Config\FileLocatorInterface;
 use Symfony\Component\Config\Loader\DirectoryAwareLoaderInterface;
 use Symfony\Component\Config\Loader\Loader;
 use Symfony\Component\Config\Resource\DirectoryResource;
-use Symfony\Component\Routing\Exception\InvalidArgumentException;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
@@ -39,17 +38,12 @@ final class Psr4DirectoryLoader extends Loader implements DirectoryAwareLoaderIn
      */
     public function load(mixed $resource, ?string $type = null): ?RouteCollection
     {
-        $excluded = $resource['_excluded'] ?? [];
         $path = $this->locator->locate($resource['path'], $this->currentDirectory);
         if (!is_dir($path)) {
             return new RouteCollection();
         }
 
-        if (!preg_match('/^(?:[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*+\\\)++$/', trim($resource['namespace'], '\\').'\\')) {
-            throw new InvalidArgumentException(\sprintf('Namespace "%s" is not a valid PSR-4 prefix.', $resource['namespace']));
-        }
-
-        return $this->loadFromDirectory($path, trim($resource['namespace'], '\\'), $excluded);
+        return $this->loadFromDirectory($path, trim($resource['namespace'], '\\'));
     }
 
     public function supports(mixed $resource, ?string $type = null): bool
@@ -65,7 +59,7 @@ final class Psr4DirectoryLoader extends Loader implements DirectoryAwareLoaderIn
         return $loader;
     }
 
-    private function loadFromDirectory(string $directory, string $psr4Prefix, array $excluded = []): RouteCollection
+    private function loadFromDirectory(string $directory, string $psr4Prefix): RouteCollection
     {
         $collection = new RouteCollection();
         $collection->addResource(new DirectoryResource($directory, '/\.php$/'));
@@ -80,13 +74,8 @@ final class Psr4DirectoryLoader extends Loader implements DirectoryAwareLoaderIn
 
         /** @var \SplFileInfo $file */
         foreach ($files as $file) {
-            $normalizedPath = rtrim(str_replace('\\', '/', $file->getPathname()), '/');
-            if (isset($excluded[$normalizedPath])) {
-                continue;
-            }
-
             if ($file->isDir()) {
-                $collection->addCollection($this->loadFromDirectory($file->getPathname(), $psr4Prefix.'\\'.$file->getFilename(), $excluded));
+                $collection->addCollection($this->loadFromDirectory($file->getPathname(), $psr4Prefix.'\\'.$file->getFilename()));
 
                 continue;
             }

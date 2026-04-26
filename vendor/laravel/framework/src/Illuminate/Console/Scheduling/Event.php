@@ -11,7 +11,6 @@ use Illuminate\Console\Application;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Mail\Mailer;
-use Illuminate\Log\Context\Repository;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Stringable;
@@ -198,10 +197,8 @@ class Event
      */
     protected function execute($container)
     {
-        $context = json_encode($container[Repository::class]->dehydrate());
-
         return Process::fromShellCommandline(
-            $this->buildCommand(), base_path(), ['__LARAVEL_CONTEXT' => $context], null, null
+            $this->buildCommand(), base_path(), null, null, null
         )->run(
             laravel_cloud()
                 ? fn ($type, $line) => fwrite($type === 'out' ? STDOUT : STDERR, $line)
@@ -383,7 +380,7 @@ class Event
     /**
      * E-mail the results of the scheduled operation.
      *
-     * @param  mixed  $addresses
+     * @param  array|mixed  $addresses
      * @param  bool  $onlyIfOutputExists
      * @return $this
      *
@@ -403,7 +400,7 @@ class Event
     /**
      * E-mail the results of the scheduled operation if it produces output.
      *
-     * @param  mixed  $addresses
+     * @param  array|mixed  $addresses
      * @return $this
      *
      * @throws \LogicException
@@ -416,7 +413,7 @@ class Event
     /**
      * E-mail the results of the scheduled operation if it fails.
      *
-     * @param  mixed  $addresses
+     * @param  array|mixed  $addresses
      * @return $this
      */
     public function emailOutputOnFailure($addresses)

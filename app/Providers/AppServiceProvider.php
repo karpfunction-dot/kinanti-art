@@ -6,6 +6,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Http\Request;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,8 +24,32 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // ==========================================
+        // FORCE HTTPS UNTUK SEMUA PROSES
+        // ==========================================
+        
+        // Force semua route menggunakan HTTPS di production
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+            
+            // Set root URL ke HTTPS
+            $this->app['url']->forceRootUrl(config('app.url'));
+            
+            // Trust proxies untuk Railway/Cloudflare
+            Request::setTrustedProxies(
+                ['*'], // Trust semua proxy
+                Request::HEADER_X_FORWARDED_FOR |
+                Request::HEADER_X_FORWARDED_HOST |
+                Request::HEADER_X_FORWARDED_PORT |
+                Request::HEADER_X_FORWARDED_PROTO
+            );
+        }
+
+        // ==========================================
         // LOGIKA MENU DINAMIS
-        // Kita bagikan variabel $sidebar_menu ke file 'layouts.sidebar_native'
+        // ==========================================
+        
+        // Bagikan variabel $sidebar_menu ke file 'layouts.sidebar_native'
         View::composer('layouts.sidebar_native', function ($view) {
             
             $sidebar_menu = [];

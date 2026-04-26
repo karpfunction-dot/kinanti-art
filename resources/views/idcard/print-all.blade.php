@@ -255,16 +255,9 @@ body {
 @foreach($members as $member)
 @php
     // Cari foto profil
-    $fotoPath = asset('assets/img/blank-profile.webp');
-    if (!empty($member->foto_profil)) {
-        if (file_exists(public_path('storage/foto_users/' . $member->foto_profil))) {
-            $fotoPath = asset('storage/foto_users/' . $member->foto_profil);
-        } elseif (file_exists(public_path('uploads/foto_users/' . $member->foto_profil))) {
-            $fotoPath = asset('uploads/foto_users/' . $member->foto_profil);
-        } elseif (file_exists(public_path('foto_users/' . $member->foto_profil))) {
-            $fotoPath = asset('foto_users/' . $member->foto_profil);
-        }
-    }
+    $fotoPath = !empty($member->foto_profil)
+    ? $member->foto_profil
+    : asset('assets/img/blank-profile.webp');
     
     // QR Code URL
     $qrCodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=" . urlencode($member->kode_barcode);

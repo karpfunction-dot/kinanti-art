@@ -13,7 +13,6 @@ use Illuminate\Support\Str;
 use NunoMaduro\Collision\Adapters\Laravel\Exceptions\RequirementsException;
 use NunoMaduro\Collision\Coverage;
 use ParaTest\Options;
-use ParaTest\ParaTestCommand;
 use RuntimeException;
 use SebastianBergmann\Environment\Console;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -383,6 +382,6 @@ class TestCommand extends Command
      */
     protected function isParallelDependenciesInstalled()
     {
-        return class_exists(ParaTestCommand::class);
+        return class_exists(\ParaTest\ParaTestCommand::class);
     }
 }

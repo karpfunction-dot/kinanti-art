@@ -153,7 +153,6 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
     {
         return [
             'current_page' => $this->currentPage(),
-            'current_page_url' => $this->url($this->currentPage()),
             'data' => $this->items->toArray(),
             'first_page_url' => $this->url(1),
             'from' => $this->firstItem(),
@@ -184,17 +183,5 @@ class Paginator extends AbstractPaginator implements Arrayable, ArrayAccess, Cou
     public function toJson($options = 0)
     {
         return json_encode($this->jsonSerialize(), $options);
-    }
-
-    /**
-     * Convert the object to pretty print formatted JSON.
-     *
-     * @params int $options
-     *
-     * @return string
-     */
-    public function toPrettyJson(int $options = 0)
-    {
-        return $this->toJson(JSON_PRETTY_PRINT | $options);
     }
 }

@@ -10,18 +10,18 @@ declare(strict_types=1);
 namespace Nette\Utils;
 
 use Nette;
-use function array_slice, array_splice, count, is_int;
 
 
 /**
- * Generic list with integer indices.
+ * Provides the base class for a generic list (items can be accessed by index).
  * @template T
  * @implements \IteratorAggregate<int, T>
  * @implements \ArrayAccess<int, T>
  */
 class ArrayList implements \ArrayAccess, \Countable, \IteratorAggregate
 {
-	/** @var list<T> */
+	use Nette\SmartObject;
+
 	private array $list = [];
 
 
@@ -42,6 +42,7 @@ class ArrayList implements \ArrayAccess, \Countable, \IteratorAggregate
 
 
 	/**
+	 * Returns an iterator over all items.
 	 * @return \Iterator<int, T>
 	 */
 	public function &getIterator(): \Iterator
@@ -52,6 +53,9 @@ class ArrayList implements \ArrayAccess, \Countable, \IteratorAggregate
 	}
 
 
+	/**
+	 * Returns items count.
+	 */
 	public function count(): int
 	{
 		return count($this->list);
@@ -59,8 +63,8 @@ class ArrayList implements \ArrayAccess, \Countable, \IteratorAggregate
 
 
 	/**
-	 * Replaces or appends an item.
-	 * @param  ?int  $index
+	 * Replaces or appends a item.
+	 * @param  int|null  $index
 	 * @param  T  $value
 	 * @throws Nette\OutOfRangeException
 	 */
@@ -79,7 +83,7 @@ class ArrayList implements \ArrayAccess, \Countable, \IteratorAggregate
 
 
 	/**
-	 * Returns an item.
+	 * Returns a item.
 	 * @param  int  $index
 	 * @return T
 	 * @throws Nette\OutOfRangeException
@@ -95,7 +99,7 @@ class ArrayList implements \ArrayAccess, \Countable, \IteratorAggregate
 
 
 	/**
-	 * Determines whether an item exists.
+	 * Determines whether a item exists.
 	 * @param  int  $index
 	 */
 	public function offsetExists($index): bool
@@ -120,7 +124,7 @@ class ArrayList implements \ArrayAccess, \Countable, \IteratorAggregate
 
 
 	/**
-	 * Prepends an item.
+	 * Prepends a item.
 	 * @param  T  $value
 	 */
 	public function prepend(mixed $value): void

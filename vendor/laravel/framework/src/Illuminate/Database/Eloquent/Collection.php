@@ -221,28 +221,28 @@ class Collection extends BaseCollection implements QueueableCollection
             $relations = func_get_args();
         }
 
-        if ($this->isNotEmpty()) {
-            $query = $this->first()->newQueryWithoutRelationships()->with($relations);
-
-            foreach ($query->getEagerLoads() as $key => $value) {
-                $segments = explode('.', explode(':', $key)[0]);
-
-                if (str_contains($key, ':')) {
-                    $segments[count($segments) - 1] .= ':'.explode(':', $key)[1];
-                }
-
-                $path = [];
-
-                foreach ($segments as $segment) {
-                    $path[] = [$segment => $segment];
-                }
-
-                if (is_callable($value)) {
-                    $path[count($segments) - 1][array_last($segments)] = $value;
-                }
-
-                $this->loadMissingRelation($this, $path);
+        foreach ($relations as $key => $value) {
+            if (is_numeric($key)) {
+                $key = $value;
             }
+
+            $segments = explode('.', explode(':', $key)[0]);
+
+            if (str_contains($key, ':')) {
+                $segments[count($segments) - 1] .= ':'.explode(':', $key)[1];
+            }
+
+            $path = [];
+
+            foreach ($segments as $segment) {
+                $path[] = [$segment => $segment];
+            }
+
+            if (is_callable($value)) {
+                $path[count($segments) - 1][end($segments)] = $value;
+            }
+
+            $this->loadMissingRelation($this, $path);
         }
 
         return $this;
@@ -398,11 +398,7 @@ class Collection extends BaseCollection implements QueueableCollection
         $dictionary = $this->getDictionary();
 
         foreach ($items as $item) {
-            $key = $this->getDictionaryKey($item->getKey());
-
-            if ($key !== null) {
-                $dictionary[$key] = $item;
-            }
+            $dictionary[$this->getDictionaryKey($item->getKey())] = $item;
         }
 
         return new static(array_values($dictionary));
@@ -478,9 +474,7 @@ class Collection extends BaseCollection implements QueueableCollection
         $dictionary = $this->getDictionary($items);
 
         foreach ($this->items as $item) {
-            $key = $this->getDictionaryKey($item->getKey());
-
-            if ($key === null || ! isset($dictionary[$key])) {
+            if (! isset($dictionary[$this->getDictionaryKey($item->getKey())])) {
                 $diff->add($item);
             }
         }
@@ -505,9 +499,7 @@ class Collection extends BaseCollection implements QueueableCollection
         $dictionary = $this->getDictionary($items);
 
         foreach ($this->items as $item) {
-            $key = $this->getDictionaryKey($item->getKey());
-
-            if ($key !== null && isset($dictionary[$key])) {
+            if (isset($dictionary[$this->getDictionaryKey($item->getKey())])) {
                 $intersect->add($item);
             }
         }
@@ -577,28 +569,6 @@ class Collection extends BaseCollection implements QueueableCollection
     }
 
     /**
-     * Merge the given, typically visible, attributes hidden across the entire collection.
-     *
-     * @param  array<array-key, string>|string  $attributes
-     * @return $this
-     */
-    public function mergeHidden($attributes)
-    {
-        return $this->each->mergeHidden($attributes);
-    }
-
-    /**
-     * Set the hidden attributes across the entire collection.
-     *
-     * @param  array<int, string>  $hidden
-     * @return $this
-     */
-    public function setHidden($hidden)
-    {
-        return $this->each->setHidden($hidden);
-    }
-
-    /**
      * Make the given, typically hidden, attributes visible across the entire collection.
      *
      * @param  array<array-key, string>|string  $attributes
@@ -607,17 +577,6 @@ class Collection extends BaseCollection implements QueueableCollection
     public function makeVisible($attributes)
     {
         return $this->each->makeVisible($attributes);
-    }
-
-    /**
-     * Merge the given, typically hidden, attributes visible across the entire collection.
-     *
-     * @param  array<array-key, string>|string  $attributes
-     * @return $this
-     */
-    public function mergeVisible($attributes)
-    {
-        return $this->each->mergeVisible($attributes);
     }
 
     /**
@@ -632,6 +591,17 @@ class Collection extends BaseCollection implements QueueableCollection
     }
 
     /**
+     * Set the hidden attributes across the entire collection.
+     *
+     * @param  array<int, string>  $hidden
+     * @return $this
+     */
+    public function setHidden($hidden)
+    {
+        return $this->each->setHidden($hidden);
+    }
+
+    /**
      * Append an attribute across the entire collection.
      *
      * @param  array<array-key, string>|string  $attributes
@@ -640,27 +610,6 @@ class Collection extends BaseCollection implements QueueableCollection
     public function append($attributes)
     {
         return $this->each->append($attributes);
-    }
-
-    /**
-     * Sets the appends on every element of the collection, overwriting the existing appends for each.
-     *
-     * @param  array<array-key, mixed>  $appends
-     * @return $this
-     */
-    public function setAppends(array $appends)
-    {
-        return $this->each->setAppends($appends);
-    }
-
-    /**
-     * Remove appended properties from every element in the collection.
-     *
-     * @return $this
-     */
-    public function withoutAppends()
-    {
-        return $this->setAppends([]);
     }
 
     /**
@@ -676,11 +625,7 @@ class Collection extends BaseCollection implements QueueableCollection
         $dictionary = [];
 
         foreach ($items as $value) {
-            $key = $this->getDictionaryKey($value->getKey());
-
-            if ($key !== null) {
-                $dictionary[$key] = $value;
-            }
+            $dictionary[$this->getDictionaryKey($value->getKey())] = $value;
         }
 
         return $dictionary;
@@ -691,103 +636,104 @@ class Collection extends BaseCollection implements QueueableCollection
      */
 
     /**
-     * {@inheritDoc}
+     * Count the number of items in the collection by a field or using a callback.
      *
+     * @param  (callable(TModel, TKey): array-key)|string|null  $countBy
      * @return \Illuminate\Support\Collection<array-key, int>
      */
-    #[\Override]
     public function countBy($countBy = null)
     {
         return $this->toBase()->countBy($countBy);
     }
 
     /**
-     * {@inheritDoc}
+     * Collapse the collection of items into a single array.
      *
      * @return \Illuminate\Support\Collection<int, mixed>
      */
-    #[\Override]
     public function collapse()
     {
         return $this->toBase()->collapse();
     }
 
     /**
-     * {@inheritDoc}
+     * Get a flattened array of the items in the collection.
      *
+     * @param  int  $depth
      * @return \Illuminate\Support\Collection<int, mixed>
      */
-    #[\Override]
     public function flatten($depth = INF)
     {
         return $this->toBase()->flatten($depth);
     }
 
     /**
-     * {@inheritDoc}
+     * Flip the items in the collection.
      *
      * @return \Illuminate\Support\Collection<TModel, TKey>
      */
-    #[\Override]
     public function flip()
     {
         return $this->toBase()->flip();
     }
 
     /**
-     * {@inheritDoc}
+     * Get the keys of the collection items.
      *
      * @return \Illuminate\Support\Collection<int, TKey>
      */
-    #[\Override]
     public function keys()
     {
         return $this->toBase()->keys();
     }
 
     /**
-     * {@inheritDoc}
+     * Pad collection to the specified length with a value.
      *
      * @template TPadValue
      *
+     * @param  int  $size
+     * @param  TPadValue  $value
      * @return \Illuminate\Support\Collection<int, TModel|TPadValue>
      */
-    #[\Override]
     public function pad($size, $value)
     {
         return $this->toBase()->pad($size, $value);
     }
 
     /**
-     * {@inheritDoc}
+     * Partition the collection into two arrays using the given callback or key.
      *
+     * @param  (callable(TModel, TKey): bool)|TModel|string  $key
+     * @param  TModel|string|null  $operator
+     * @param  TModel|null  $value
      * @return \Illuminate\Support\Collection<int<0, 1>, static<TKey, TModel>>
      */
-    #[\Override]
     public function partition($key, $operator = null, $value = null)
     {
         return parent::partition(...func_get_args())->toBase();
     }
 
     /**
-     * {@inheritDoc}
+     * Get an array with the values of a given key.
      *
+     * @param  string|array<array-key, string>|null  $value
+     * @param  string|null  $key
      * @return \Illuminate\Support\Collection<array-key, mixed>
      */
-    #[\Override]
     public function pluck($value, $key = null)
     {
         return $this->toBase()->pluck($value, $key);
     }
 
     /**
-     * {@inheritDoc}
+     * Zip the collection together with one or more arrays.
      *
      * @template TZipValue
      *
+     * @param  \Illuminate\Contracts\Support\Arrayable<array-key, TZipValue>|iterable<array-key, TZipValue>  ...$items
      * @return \Illuminate\Support\Collection<int, \Illuminate\Support\Collection<int, TModel|TZipValue>>
      */
-    #[\Override]
     public function zip($items)
     {
         return $this->toBase()->zip(...func_get_args());
@@ -796,6 +742,7 @@ class Collection extends BaseCollection implements QueueableCollection
     /**
      * Get the comparison function to detect duplicates.
      *
+     * @param  bool  $strict
      * @return callable(TModel, TModel): bool
      */
     protected function duplicateComparator($strict)

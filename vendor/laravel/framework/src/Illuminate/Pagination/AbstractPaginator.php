@@ -353,12 +353,8 @@ abstract class AbstractPaginator implements CanBeEscapedWhenCastToString, Htmlab
     /**
      * Transform each item in the slice of items using a callback.
      *
-     * @template TMapValue
-     *
-     * @param  callable(TValue, TKey): TMapValue  $callback
+     * @param  callable  $callback
      * @return $this
-     *
-     * @phpstan-this-out static<TKey, TMapValue>
      */
     public function through(callable $callback)
     {

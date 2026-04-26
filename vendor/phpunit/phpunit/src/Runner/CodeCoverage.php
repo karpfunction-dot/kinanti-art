@@ -123,7 +123,7 @@ final class CodeCoverage
     }
 
     /**
-     * @phpstan-assert-if-true !null $this->codeCoverage
+     * @phpstan-assert-if-true !null $this->instance
      */
     public function isActive(): bool
     {
@@ -229,7 +229,7 @@ final class CodeCoverage
 
             try {
                 $writer = new CloverReport;
-                $writer->process($this->codeCoverage(), $configuration->coverageClover(), 'Clover Coverage');
+                $writer->process($this->codeCoverage(), $configuration->coverageClover());
 
                 $this->codeCoverageGenerationSucceeded($printer);
 

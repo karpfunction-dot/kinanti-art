@@ -26,9 +26,9 @@ use ReflectionMethod;
 /**
  * @template TModel of \Illuminate\Database\Eloquent\Model
  *
- * @property-read HigherOrderBuilderProxy|$this $orWhere
- * @property-read HigherOrderBuilderProxy|$this $whereNot
- * @property-read HigherOrderBuilderProxy|$this $orWhereNot
+ * @property-read HigherOrderBuilderProxy $orWhere
+ * @property-read HigherOrderBuilderProxy $whereNot
+ * @property-read HigherOrderBuilderProxy $orWhereNot
  *
  * @mixin \Illuminate\Database\Query\Builder
  */
@@ -118,7 +118,6 @@ class Builder implements BuilderContract
         'explain',
         'getbindings',
         'getconnection',
-        'getcountforpagination',
         'getgrammar',
         'getrawbindings',
         'implode',
@@ -243,21 +242,6 @@ class Builder implements BuilderContract
     }
 
     /**
-     * Remove all global scopes except the given scopes.
-     *
-     * @param  array  $scopes
-     * @return $this
-     */
-    public function withoutGlobalScopesExcept(array $scopes = [])
-    {
-        $this->withoutGlobalScopes(
-            array_diff(array_keys($this->scopes), $scopes)
-        );
-
-        return $this;
-    }
-
-    /**
      * Get an array of global scopes that were removed from the query.
      *
      * @return array
@@ -323,21 +307,6 @@ class Builder implements BuilderContract
         }
 
         return $this->where($this->model->getQualifiedKeyName(), '!=', $id);
-    }
-
-    /**
-     * Exclude the given models from the query results.
-     *
-     * @param  iterable|mixed  $models
-     * @return static
-     */
-    public function except($models)
-    {
-        return $this->whereKeyNot(
-            $models instanceof Model
-                ? $models->getKey()
-                : Collection::wrap($models)->modelKeys()
-        );
     }
 
     /**
@@ -522,7 +491,7 @@ class Builder implements BuilderContract
             return [];
         }
 
-        if (! is_array(array_first($values))) {
+        if (! is_array(reset($values))) {
             $values = [$values];
         }
 
@@ -700,10 +669,10 @@ class Builder implements BuilderContract
      * Get the first record matching the attributes. If the record is not found, create it.
      *
      * @param  array  $attributes
-     * @param  (\Closure(): array)|array  $values
+     * @param  array  $values
      * @return TModel
      */
-    public function firstOrCreate(array $attributes = [], Closure|array $values = [])
+    public function firstOrCreate(array $attributes = [], array $values = [])
     {
         if (! is_null($instance = (clone $this)->where($attributes)->first())) {
             return $instance;
@@ -716,13 +685,13 @@ class Builder implements BuilderContract
      * Attempt to create the record. If a unique constraint violation occurs, attempt to find the matching record.
      *
      * @param  array  $attributes
-     * @param  (\Closure(): array)|array  $values
+     * @param  array  $values
      * @return TModel
      */
-    public function createOrFirst(array $attributes = [], Closure|array $values = [])
+    public function createOrFirst(array $attributes = [], array $values = [])
     {
         try {
-            return $this->withSavepointIfNeeded(fn () => $this->create(array_merge($attributes, value($values))));
+            return $this->withSavepointIfNeeded(fn () => $this->create(array_merge($attributes, $values)));
         } catch (UniqueConstraintViolationException $e) {
             return $this->useWritePdo()->where($attributes)->first() ?? throw $e;
         }
@@ -1149,7 +1118,7 @@ class Builder implements BuilderContract
         // Next we will set the limit and offset for this query so that when we get the
         // results we get the proper section of results. Then, we'll create the full
         // paginator instances for these results with the given page and per page.
-        $this->offset(($page - 1) * $perPage)->limit($perPage + 1);
+        $this->skip(($page - 1) * $perPage)->take($perPage + 1);
 
         return $this->simplePaginator($this->get($columns), $perPage, $page, [
             'path' => Paginator::resolveCurrentPath(),
@@ -1280,12 +1249,12 @@ class Builder implements BuilderContract
             return 0;
         }
 
-        if (! is_array(array_first($values))) {
+        if (! is_array(reset($values))) {
             $values = [$values];
         }
 
         if (is_null($update)) {
-            $update = array_keys(array_first($values));
+            $update = array_keys(reset($values));
         }
 
         return $this->toBase()->upsert(
@@ -1298,7 +1267,7 @@ class Builder implements BuilderContract
     /**
      * Update the column's update timestamp.
      *
-     * @param  array|string|null  $column
+     * @param  string|null  $column
      * @return int|false
      */
     public function touch($column = null)
@@ -1306,9 +1275,7 @@ class Builder implements BuilderContract
         $time = $this->model->freshTimestamp();
 
         if ($column) {
-            $columns = (new BaseCollection(Arr::wrap($column)))->mapWithKeys(fn ($column) => [$column => $time])->all();
-
-            return $this->toBase()->update($columns);
+            return $this->toBase()->update([$column => $time]);
         }
 
         $column = $this->model->getUpdatedAtColumn();
@@ -1383,7 +1350,7 @@ class Builder implements BuilderContract
 
         $segments = preg_split('/\s+as\s+/i', $this->query->from);
 
-        $qualifiedColumn = array_last($segments).'.'.$column;
+        $qualifiedColumn = end($segments).'.'.$column;
 
         $values[$qualifiedColumn] = Arr::get($values, $qualifiedColumn, $values[$column]);
 

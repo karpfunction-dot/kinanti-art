@@ -70,7 +70,6 @@ class PasswordBrokerManager implements FactoryContract
             $this->createTokenRepository($config),
             $this->app['auth']->createUserProvider($config['provider'] ?? null),
             $this->app['events'] ?? null,
-            timeboxDuration: $this->app['config']->get('auth.timebox_duration', 200000),
         );
     }
 
@@ -95,6 +94,7 @@ class PasswordBrokerManager implements FactoryContract
                 $key,
                 ($config['expire'] ?? 60) * 60,
                 $config['throttle'] ?? 0,
+                $config['prefix'] ?? '',
             );
         }
 

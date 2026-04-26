@@ -113,7 +113,7 @@ class ExceptionHandlerFake implements ExceptionHandler, Fake
     {
         try {
             $this->assertReported($exception);
-        } catch (ExpectationFailedException) {
+        } catch (ExpectationFailedException $e) {
             return;
         }
 
@@ -246,16 +246,6 @@ class ExceptionHandlerFake implements ExceptionHandler, Fake
         }
 
         return $this;
-    }
-
-    /**
-     * Get the exceptions that have been reported.
-     *
-     * @return list<\Throwable>
-     */
-    public function reported()
-    {
-        return $this->reported;
     }
 
     /**

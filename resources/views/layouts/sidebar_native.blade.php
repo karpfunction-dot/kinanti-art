@@ -15,7 +15,9 @@
         @endphp
 
         <div class="sidebar-avatar">
-            <img src="{{ $foto_url }}" class="sidebar-user-photo" alt="Foto Profil">
+            <img src="{{ auth()->user()->profil->foto_profil ?? asset('assets/img/blank-profile.webp') }}" 
+     class="sidebar-user-photo" 
+     alt="Foto Profil">
             <div class="avatar-status"></div>
         </div>
         

@@ -1062,6 +1062,8 @@ if (!function_exists('PHPUnit\Framework\assertEmpty')) {
      * @throws ExpectationFailedException
      * @throws GeneratorNotSupportedException
      *
+     * @phpstan-assert empty $actual
+     *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
      * @see Assert::assertEmpty
@@ -1078,6 +1080,8 @@ if (!function_exists('PHPUnit\Framework\assertNotEmpty')) {
      *
      * @throws ExpectationFailedException
      * @throws GeneratorNotSupportedException
+     *
+     * @phpstan-assert !empty $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *

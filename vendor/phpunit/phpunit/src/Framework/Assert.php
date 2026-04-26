@@ -1073,6 +1073,8 @@ abstract class Assert
      *
      * @throws ExpectationFailedException
      * @throws GeneratorNotSupportedException
+     *
+     * @phpstan-assert empty $actual
      */
     final public static function assertEmpty(mixed $actual, string $message = ''): void
     {
@@ -1088,6 +1090,8 @@ abstract class Assert
      *
      * @throws ExpectationFailedException
      * @throws GeneratorNotSupportedException
+     *
+     * @phpstan-assert !empty $actual
      */
     final public static function assertNotEmpty(mixed $actual, string $message = ''): void
     {
