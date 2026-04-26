@@ -10,8 +10,6 @@ use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\TugasWewenangController;
 use App\Http\Controllers\IdCardController;
 use App\Http\Controllers\DashboardController;
-
-use App\Http\Controllers\AbsensiController;
 use App\Http\Middleware\CheckRole;
 // =============================================================
 // HALAMAN PUBLIK
@@ -333,16 +331,35 @@ Route::get('/cek-env', function () {
 |--------------------------------------------------------------------------
 */
 
+// Route yang memerlukan auth
 Route::middleware(['auth'])->group(function () {
     
-    // Absensi Routes
-    Route::prefix('absensi')->group(function () {
-        Route::get('/', [AbsensiController::class, 'index'])->name('absensi.index');
-        Route::get('/scan', [AbsensiController::class, 'scan'])->name('absensi.scan');
-        Route::post('/proses', [AbsensiController::class, 'proses'])->name('absensi.proses');
-        Route::post('/proses-api', [AbsensiController::class, 'prosesApi'])->name('absensi.proses.api'); // NEW API endpoint
-        Route::delete('/{id}', [AbsensiController::class, 'destroy'])->name('absensi.destroy');
-        Route::get('/export', [AbsensiController::class, 'export'])->name('absensi.export');
-    });
+    // Dashboard
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
     
+    // Profile routes (jika pakai Laravel Breeze/Jetstream)
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    
+    // ==========================================
+    // ABSENSI ROUTES - dengan middleware role
+    // ==========================================
+    
+    // Index boleh diakses semua yang login
+    Route::get('/absensi', [AbsensiController::class, 'index'])->name('absensi.index');
+    
+    // Scan routes - hanya untuk admin, pelatih, manajemen
+    Route::middleware(['role:admin,pelatih,manajemen'])->group(function () {
+        Route::get('/absensi/scan', [AbsensiController::class, 'scan'])->name('absensi.scan');
+        Route::post('/absensi/proses', [AbsensiController::class, 'proses'])->name('absensi.proses');
+        Route::post('/absensi/proses-api', [AbsensiController::class, 'prosesApi'])->name('absensi.proses.api');
+        Route::delete('/absensi/{id}', [AbsensiController::class, 'destroy'])->name('absensi.destroy');
+        Route::get('/absensi/export', [AbsensiController::class, 'export'])->name('absensi.export');
+    });
 });
+
+// Auth routes (jika pakai Laravel Breeze)
+require __DIR__.'/auth.php';
