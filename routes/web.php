@@ -80,8 +80,31 @@ Route::prefix('absensi')->group(function () {
     Route::get('/', [AbsensiController::class, 'index'])->name('absensi.index');
     Route::get('/scan', [AbsensiController::class, 'scan'])->name('absensi.scan');
     Route::post('/proses', [AbsensiController::class, 'proses'])->name('absensi.proses');
-    Route::post('/proses-api', [AbsensiController::class, 'prosesApi'])->name('absensi.proses.api');  // 🔥 TAMBAHKAN INI
+    Route::post('/proses-api', [AbsensiController::class, 'prosesApi'])->name('absensi.proses.api');
     Route::delete('/{id}', [AbsensiController::class, 'destroy'])->name('absensi.destroy');
+});
+
+// =============================================================
+// CLEAR CACHE ROUTE (Emergency)
+// =============================================================
+Route::get('/clear-cache', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('route:clear');
+        \Illuminate\Support\Facades\Artisan::call('config:clear');
+        \Illuminate\Support\Facades\Artisan::call('cache:clear');
+        \Illuminate\Support\Facades\Artisan::call('view:clear');
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'All cache cleared successfully!',
+            'output' => \Illuminate\Support\Facades\Artisan::output()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
+    }
 });
     // =============================================================
     // LAPORAN ABSENSI
@@ -325,28 +348,3 @@ Route::get('/cek-env', function () {
     ];
 });
 
-// Auto clear cache ketika diakses via URL tertentu
-Route::get('/clear-route-cache', function () {
-    try {
-        Artisan::call('route:clear');
-        Artisan::call('config:clear');
-        Artisan::call('cache:clear');
-        Artisan::call('view:clear');
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Cache cleared successfully',
-            'output' => Artisan::output()
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 500);
-    }
-})->withoutMiddleware();
-
-// Tambahin juga route langsung untuk API (fallback)
-Route::post('/absensi-proses-api', [AbsensiController::class, 'prosesApi'])
-    ->middleware('auth')
-    ->name('absensi.proses.api.fallback');
