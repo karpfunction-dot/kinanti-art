@@ -68,14 +68,18 @@ class ProfilController extends Controller
                 $file = $request->file('foto_profil');
             
                 // GANTI FOLDER DISINI AGAR MASUK KE FOLDER MANUAL KAMU
-                $uploadedFileUrl = Cloudinary::upload($file->getRealPath(), [
-                    'folder' => 'foto_users', // Sesuaikan dengan folder yang kamu buat
+                $$uploadedFile = $request->file('foto');
+                $result = Cloudinary::upload($uploadedFile->getRealPath(), [
+                    'folder' => 'foto_users',
                     'transformation' => [
-                        'width' => 400,
-                        'height' => 400,
-                        'crop' => 'limit'
+                        'width' => 500,      // Maksimal lebar 500px (sudah cukup tajam untuk web)
+                        'height' => 500,     // Maksimal tinggi 500px
+                        'crop' => 'limit',    // Kecilkan jika lebih besar, jangan paksa jika lebih kecil
+                        'quality' => 'auto', // Kompresi otomatis
+                        'fetch_format' => 'auto' // Format otomatis (WebP/AVIF)
                     ]
-                ])->getSecurePath();
+                ]);
+                $url = $result->getSecurePath();
             
                 $updateData['foto_profil'] = $uploadedFileUrl;
             }
