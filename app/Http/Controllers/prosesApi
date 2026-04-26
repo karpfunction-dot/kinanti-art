@@ -218,44 +218,61 @@ public function prosesApi(Request $request)
         // 2. Ambil role dari berbagai kemungkinan sumber
         $userRole = null;
         
-        // Coba dari property langsung
-        if (isset($currentUser->role) && !empty($currentUser->role)) {
+        // Coba dari property langsung (string)
+        if (isset($currentUser->role) && is_string($currentUser->role) && !empty($currentUser->role)) {
             $userRole = $currentUser->role;
         }
         
-        // Coba dari atribut model
+        // Coba dari atribut model (string)
         $attrs = $currentUser->getAttributes();
-        if (isset($attrs['role']) && !empty($attrs['role'])) {
+        if (isset($attrs['role']) && is_string($attrs['role']) && !empty($attrs['role'])) {
             $userRole = $attrs['role'];
         }
         
-        // Coba dari tabel roles (jika menggunakan relasi)
+        // Coba dari tabel roles - AMBIL HANYA NAMANYA (STRING)
         if (!$userRole) {
-            $userRole = DB::table('users as u')
+            $roleData = DB::table('users as u')
                 ->leftJoin('roles as r', 'u.id_role', '=', 'r.id_role')
                 ->where('u.id_user', $currentUser->id_user)
-                ->value('r.nama_role');
+                ->select('r.nama_role')
+                ->first();
+            
+            // 🔥 PERBAIKAN: Ambil nama_role sebagai string
+            if ($roleData && isset($roleData->nama_role)) {
+                $userRole = $roleData->nama_role;
+            }
         }
         
-        // 3. Log untuk debugging (hapus setelah masalah selesai)
+        // 3. Jika masih object (kasus Anda), extract nama_role
+        if (is_object($userRole) && isset($userRole->nama_role)) {
+            $userRole = $userRole->nama_role;
+        }
+        
+        // 4. Jika masih array, extract
+        if (is_array($userRole) && isset($userRole['nama_role'])) {
+            $userRole = $userRole['nama_role'];
+        }
+        
+        // 5. Log untuk debugging
         \Log::info('Proses API - User Role Check', [
             'user_id' => $currentUser->id_user,
             'email' => $currentUser->email,
-            'role_found' => $userRole,
-            'all_attributes' => $attrs
+            'role_found_type' => gettype($userRole),
+            'role_found_value' => $userRole
         ]);
         
-        // 4. Role yang diizinkan (case insensitive)
+        // 6. Role yang diizinkan
         $allowedRoles = ['admin', 'pelatih', 'manajemen', 'owner', 'superadmin'];
-        $userRoleLower = strtolower(trim($userRole ?? ''));
+        $userRoleLower = strtolower(trim((string)$userRole ?? ''));
         
-        // 5. Jika role tidak ditemukan atau tidak diizinkan
+        // 7. Jika role tidak ditemukan atau tidak diizinkan
         if (empty($userRoleLower) || !in_array($userRoleLower, $allowedRoles)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Akses ditolak! Role Anda: "' . ($userRole ?? 'tidak terdeteksi') . '". Diperlukan: admin/pelatih/manajemen.',
                 'debug' => [
                     'user_role_detected' => $userRole,
+                    'user_role_type' => gettype($userRole),
                     'user_id' => $currentUser->id_user,
                     'email' => $currentUser->email
                 ]
@@ -312,7 +329,9 @@ public function prosesApi(Request $request)
         // =============================================================
         // SIMPAN ABSENSI
         // =============================================================
-        $kategori = in_array(strtolower($user->role), ['pelatih', 'manajemen', 'admin', 'owner', 'superadmin']) 
+        // Pastikan role untuk kategori adalah string
+        $userRoleForCategory = is_object($user->role) ? ($user->role->nama_role ?? 'siswa') : $user->role;
+        $kategori = in_array(strtolower($userRoleForCategory), ['pelatih', 'manajemen', 'admin', 'owner', 'superadmin']) 
             ? 'Pelatih' 
             : 'Siswa';
         
@@ -328,7 +347,7 @@ public function prosesApi(Request $request)
             'status' => 'Hadir',
             'kategori' => $kategori,
             'lokasi' => 'Studio',
-            'keterangan' => "Absen via scanner: {$user->nama_lengkap} ({$user->role})",
+            'keterangan' => "Absen via scanner: {$user->nama_lengkap}",
             'status_absen' => 'tercatat',
             'created_at' => $waktuNow,
             'scanned_by' => $currentUser->id_user,
@@ -340,16 +359,19 @@ public function prosesApi(Request $request)
             'scanned_by' => $currentUser->id_user
         ]);
         
+        // Format user untuk response (pastikan role string)
+        $userResponse = [
+            'nama_lengkap' => $user->nama_lengkap,
+            'role' => is_object($user->role) ? ($user->role->nama_role ?? 'Member') : $user->role,
+            'kode_barcode' => $user->kode_barcode,
+            'foto_profil' => $user->foto_profil,
+            'sudah_absen' => false
+        ];
+        
         return response()->json([
             'success' => true,
             'message' => '✅ Absensi berhasil untuk ' . $user->nama_lengkap,
-            'user' => [
-                'nama_lengkap' => $user->nama_lengkap,
-                'role' => $user->role,
-                'kode_barcode' => $user->kode_barcode,
-                'foto_profil' => $user->foto_profil,
-                'sudah_absen' => false
-            ]
+            'user' => $userResponse
         ]);
         
     } catch (\Illuminate\Validation\ValidationException $e) {
