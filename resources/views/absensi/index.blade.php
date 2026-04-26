@@ -26,31 +26,7 @@
     </div>
 
     <div class="mb-4">
-        <div class="dropdown">
-            <button class="btn btn-white shadow-sm border-0 px-4 py-3 dropdown-toggle w-100 w-md-auto text-start" type="button" id="btnInputKelas" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius: 15px; font-weight: 600; color: #0f3b2c;">
-                <i class="fa fa-edit text-success me-2"></i> Input Absensi Per Kelas (H/I/S/A)
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2 mt-2" aria-labelledby="btnInputKelas" style="border-radius: 15px; min-width: 250px;">
-                <li class="dropdown-header text-uppercase small fw-bold text-muted pb-2">Pilih Kelas Latihan</li>
-                @php
-                    $list_kelas = DB::table('kelas')->get();
-                @endphp
-                @forelse($list_kelas as $k)
-                    <li>
-                        <a class="dropdown-item py-2 px-3 rounded-3" href="{{ route('absensi.kelas', $k->id_kelas) }}">
-                            <div class="d-flex align-items-center">
-                                <div class="bg-success bg-opacity-10 rounded p-1 me-2">
-                                    <i class="fa fa-chevron-right text-success small"></i>
-                                </div>
-                                <span>{{ $k->nama_kelas }}</span>
-                            </div>
-                        </a>
-                    </li>
-                @empty
-                    <li><span class="dropdown-item disabled text-muted">Belum ada data kelas</span></li>
-                @endforelse
-            </ul>
-        </div>
+        
     </div>
 
     <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px; background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);">
