@@ -12,14 +12,13 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $role_id = $user->id_role; 
-        $bulan_ini = date('Y-m');
 
-        // Ambil data profil (Nama & Foto Cloudinary)
+        // 1. Ambil data profil (Untuk Nama & Foto Cloudinary)
         $profil = DB::table('profil_anggota')->where('id_user', $user->id_user)->first();
         $nama = $profil->nama_lengkap ?? 'User';
         $foto = $profil->foto_profil ?? 'https://ui-avatars.com/api/?name='.urlencode($nama);
 
-        // 1 & 2. ADMIN & MANAJEMEN
+        // --- DASHBOARD ADMIN & MANAJEMEN (Role 1 & 2) ---
         if ($role_id == 1 || $role_id == 2) {
             $total_siswa = DB::table('users')->where('id_role', 4)->count();
             $total_pelatih = DB::table('users')->where('id_role', 3)->count();
@@ -29,11 +28,11 @@ class DashboardController extends Controller
             return view('dashboard.admin', compact('total_siswa', 'total_pelatih', 'absensi_hari_ini', 'data_kelas', 'nama', 'foto'));
         }
 
-        // 3. PELATIH (Nabila)
+        // --- DASHBOARD PELATIH (Role 3 - Nabila) ---
         elseif ($role_id == 3) {
             $hari_indo = $this->getHariIndo(date('l'));
             
-            // GANTI NAMA VARIABEL DI SINI
+            // Ambil jadwal hari ini
             $jadwal_hari_ini = DB::table('jadwal_dev as j')
                 ->join('kelas as k', 'j.id_kelas', '=', 'k.id_kelas')
                 ->where('j.id_pelatih', $user->id_user)
@@ -41,16 +40,16 @@ class DashboardController extends Controller
                 ->select('j.*', 'k.nama_kelas')
                 ->get();
 
+            // Total sesi mengajar yang sudah dilakukan (Hadir)
             $total_mengajar = DB::table('absensi')
                 ->where('id_user', $user->id_user)
                 ->where('status', 'Hadir')
                 ->count();
 
-            // PASTIKAN DI COMPACT JUGA DIGANTI
             return view('dashboard.pelatih', compact('jadwal_hari_ini', 'total_mengajar', 'nama', 'foto'));
         }
 
-        // 4. SISWA
+        // --- DASHBOARD SISWA (Role 4) ---
         elseif ($role_id == 4) {
             $kelas_diikuti = DB::table('kelas_siswa as ks')
                 ->join('kelas as k', 'ks.id_kelas', '=', 'k.id_kelas')
@@ -71,7 +70,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Pastikan fungsi ini ADA di dalam class DashboardController
+     * Konversi Nama Hari ke Bahasa Indonesia
      */
     private function getHariIndo($day) {
         $days = [
