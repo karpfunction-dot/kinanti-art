@@ -9,62 +9,78 @@ use Illuminate\Support\Facades\Auth;
 class DashboardController extends Controller
 {
     public function index()
-{
-    $user = Auth::user();
-    $role_id = $user->id_role; 
-    $bulan_ini = date('Y-m');
+    {
+        $user = Auth::user();
+        $role_id = $user->id_role; 
+        $bulan_ini = date('Y-m');
 
-    // Ambil data profil untuk semua role agar tidak undefined
-    $profil = DB::table('profil_anggota')->where('id_user', $user->id_user)->first();
-    $nama = $profil->nama_lengkap ?? 'User';
-    $foto = $profil->foto_profil ?? 'https://res.cloudinary.com/your-cloud-name/image/upload/v1/default.jpg'; // URL Default jika kosong
+        // Ambil data profil (Nama & Foto Cloudinary)
+        $profil = DB::table('profil_anggota')->where('id_user', $user->id_user)->first();
+        $nama = $profil->nama_lengkap ?? 'User';
+        $foto = $profil->foto_profil ?? 'https://ui-avatars.com/api/?name='.urlencode($nama);
 
-    // 1 & 2. ADMIN & MANAJEMEN
-    if ($role_id == 1 || $role_id == 2) {
-        $total_siswa = DB::table('users')->where('id_role', 4)->count();
-        $total_pelatih = DB::table('users')->where('id_role', 3)->count();
-        $absensi_hari_ini = DB::table('absensi')->whereDate('tanggal', date('Y-m-d'))->count();
-        $data_kelas = DB::table('kelas')->get();
+        // 1 & 2. ADMIN & MANAJEMEN
+        if ($role_id == 1 || $role_id == 2) {
+            $total_siswa = DB::table('users')->where('id_role', 4)->count();
+            $total_pelatih = DB::table('users')->where('id_role', 3)->count();
+            $absensi_hari_ini = DB::table('absensi')->whereDate('tanggal', date('Y-m-d'))->count();
+            $data_kelas = DB::table('kelas')->get();
 
-        return view('dashboard.admin', compact('total_siswa', 'total_pelatih', 'absensi_hari_ini', 'data_kelas', 'nama', 'foto'));
+            return view('dashboard.admin', compact('total_siswa', 'total_pelatih', 'absensi_hari_ini', 'data_kelas', 'nama', 'foto'));
+        }
+
+        // 3. PELATIH (Nabila)
+        elseif ($role_id == 3) {
+            $hari_indo = $this->getHariIndo(date('l')); // Fungsi ini yang tadi hilang
+            
+            $jadwal_saya = DB::table('jadwal_dev as j')
+                ->join('kelas as k', 'j.id_kelas', '=', 'k.id_kelas')
+                ->where('j.id_pelatih', $user->id_user)
+                ->where('j.hari', $hari_indo)
+                ->select('j.*', 'k.nama_kelas')
+                ->get();
+
+            $total_mengajar = DB::table('absensi')
+                ->where('id_user', $user->id_user)
+                ->where('status', 'Hadir')
+                ->count();
+
+            return view('dashboard.pelatih', compact('jadwal_saya', 'total_mengajar', 'nama', 'foto'));
+        }
+
+        // 4. SISWA
+        elseif ($role_id == 4) {
+            $kelas_diikuti = DB::table('kelas_siswa as ks')
+                ->join('kelas as k', 'ks.id_kelas', '=', 'k.id_kelas')
+                ->where('ks.id_user', $user->id_user)
+                ->select('k.nama_kelas')
+                ->get();
+
+            $riwayat_absensi = DB::table('absensi')
+                ->where('id_user', $user->id_user)
+                ->orderBy('tanggal', 'desc')
+                ->limit(5)
+                ->get();
+
+            return view('dashboard.siswa', compact('kelas_diikuti', 'riwayat_absensi', 'nama', 'foto'));
+        }
+
+        return redirect('/login');
     }
 
-    // 3. PELATIH (Nabila)
-    elseif ($role_id == 3) {
-        $hari_indo = $this->getHariIndo(date('l'));
-        $jadwal_saya = DB::table('jadwal_dev as j')
-            ->join('kelas as k', 'j.id_kelas', '=', 'k.id_kelas')
-            ->where('j.id_pelatih', $user->id_user)
-            ->where('j.hari', $hari_indo)
-            ->select('j.*', 'k.nama_kelas')
-            ->get();
-
-        $total_mengajar = DB::table('absensi')
-            ->where('id_user', $user->id_user)
-            ->where('status', 'Hadir')
-            ->count();
-
-        // Tambahkan 'nama' dan 'foto' di compact
-        return view('dashboard.pelatih', compact('jadwal_saya', 'total_mengajar', 'nama', 'foto'));
+    /**
+     * Pastikan fungsi ini ADA di dalam class DashboardController
+     */
+    private function getHariIndo($day) {
+        $days = [
+            'Sunday' => 'Minggu',
+            'Monday' => 'Senin',
+            'Tuesday' => 'Selasa',
+            'Wednesday' => 'Rabu',
+            'Thursday' => 'Kamis',
+            'Friday' => 'Jumat',
+            'Saturday' => 'Sabtu'
+        ];
+        return $days[$day] ?? $day;
     }
-
-    // 4. SISWA
-    elseif ($role_id == 4) {
-        $kelas_diikuti = DB::table('kelas_siswa as ks')
-            ->join('kelas as k', 'ks.id_kelas', '=', 'k.id_kelas')
-            ->where('ks.id_user', $user->id_user)
-            ->select('k.nama_kelas')
-            ->get();
-
-        $riwayat_absensi = DB::table('absensi')
-            ->where('id_user', $user->id_user)
-            ->orderBy('tanggal', 'desc')
-            ->limit(5)
-            ->get();
-
-        return view('dashboard.siswa', compact('kelas_diikuti', 'riwayat_absensi', 'nama', 'foto'));
-    }
-
-    return redirect('/login');
-}
 }
