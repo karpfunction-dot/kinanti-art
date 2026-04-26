@@ -31,9 +31,10 @@ class DashboardController extends Controller
 
         // 3. PELATIH (Nabila)
         elseif ($role_id == 3) {
-            $hari_indo = $this->getHariIndo(date('l')); // Fungsi ini yang tadi hilang
+            $hari_indo = $this->getHariIndo(date('l'));
             
-            $jadwal_saya = DB::table('jadwal_dev as j')
+            // GANTI NAMA VARIABEL DI SINI
+            $jadwal_hari_ini = DB::table('jadwal_dev as j')
                 ->join('kelas as k', 'j.id_kelas', '=', 'k.id_kelas')
                 ->where('j.id_pelatih', $user->id_user)
                 ->where('j.hari', $hari_indo)
@@ -45,7 +46,8 @@ class DashboardController extends Controller
                 ->where('status', 'Hadir')
                 ->count();
 
-            return view('dashboard.pelatih', compact('jadwal_saya', 'total_mengajar', 'nama', 'foto'));
+            // PASTIKAN DI COMPACT JUGA DIGANTI
+            return view('dashboard.pelatih', compact('jadwal_hari_ini', 'total_mengajar', 'nama', 'foto'));
         }
 
         // 4. SISWA
