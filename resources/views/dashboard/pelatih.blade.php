@@ -8,9 +8,11 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm p-4" style="border-radius: 20px; background: linear-gradient(135deg, #0f3b2c 0%, #1a5d45 100%);">
                 <div class="d-flex align-items-center gap-4">
-                    <img src="{{ asset('storage/foto_profil/' . $foto) }}" 
+                    <img src="{{ $foto }}" 
                          class="rounded-circle border border-3 border-white shadow-sm" 
-                         style="width: 80px; height: 80px; object-fit: cover;">
+                         style="width: 80px; height: 80px; object-fit: cover;"
+                         onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($nama) }}&background=random'">
+                    
                     <div class="text-white">
                         <h2 class="fw-bold mb-1">Halo, Kak {{ explode(' ', $nama)[0] }}! 👋</h2>
                         <p class="mb-0 opacity-75">Semangat melatih hari ini di Sanggar Kinanti Art.</p>
@@ -53,7 +55,7 @@
         <div class="col-lg-12">
             <div class="card border-0 shadow-sm" style="border-radius: 20px;">
                 <div class="card-header bg-white border-0 p-4">
-                    <h5 class="fw-bold mb-0"><i class="fa fa-clock text-success me-2"></i>Jadwal Mengajar Hari Ini</h5>
+                    <h5 class="fw-bold mb-0"><i class="fa fa-clock text-success me-2"></i>Jadwal Mengajar Hari Ini ({{ \Carbon\Carbon::now()->translatedFormat('l') }})</h5>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -74,7 +76,7 @@
                                     </td>
                                     <td>
                                         <span class="badge bg-light text-dark border">
-                                            {{ $j->jam_mulai }} - {{ $j->jam_selesai }}
+                                            {{ \Carbon\Carbon::parse($j->jam_mulai)->format('H:i') }} - {{ \Carbon\Carbon::parse($j->jam_selesai)->format('H:i') }}
                                         </span>
                                     </td>
                                     <td><i class="fa fa-map-marker-alt text-muted me-1"></i> Studio Utama</td>
