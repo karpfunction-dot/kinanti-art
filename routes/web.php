@@ -10,7 +10,7 @@ use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\TugasWewenangController;
 use App\Http\Controllers\IdCardController;
 use App\Http\Controllers\DashboardController;
-
+use Illuminate\Support\Facades\Artisan;
 // =============================================================
 // HALAMAN PUBLIK
 // =============================================================
