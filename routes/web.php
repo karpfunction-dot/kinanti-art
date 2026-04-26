@@ -74,13 +74,22 @@ Route::middleware('auth')->group(function () {
     });
 
 // =============================================================
-// MANAJEMEN ABSENSI
+// MANAJEMEN ABSENSI (UPDATED: Hybrid System)
 // =============================================================
 Route::prefix('absensi')->group(function () {
+    // 1. Riwayat Absensi
     Route::get('/', [AbsensiController::class, 'index'])->name('absensi.index');
+    
+    // 2. Fitur Scanner (Untuk yang bawa ID Card)
     Route::get('/scan', [AbsensiController::class, 'scan'])->name('absensi.scan');
     Route::post('/proses', [AbsensiController::class, 'proses'])->name('absensi.proses');
     Route::post('/proses-api', [AbsensiController::class, 'prosesApi'])->name('absensi.proses.api');
+    
+    // 3. Fitur Input Massal per Kelas (Untuk Lupa ID Card / Izin / Sakit / Alpa)
+    Route::get('/kelas/{id_kelas}', [AbsensiController::class, 'inputKelas'])->name('absensi.kelas');
+    Route::post('/simpan-massal', [AbsensiController::class, 'storeMassal'])->name('absensi.storeMassal');
+    
+    // 4. Hapus Riwayat
     Route::delete('/{id}', [AbsensiController::class, 'destroy'])->name('absensi.destroy');
 });
 

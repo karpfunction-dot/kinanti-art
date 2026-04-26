@@ -23,6 +23,32 @@
         </div>
     </div>
 
+    <div class="d-flex flex-wrap gap-2 mb-4">
+    <a href="{{ route('absensi.scan') }}" class="btn btn-dark rounded-pill px-4">
+        <i class="fa fa-qrcode me-2"></i> Scan Barcode
+    </a>
+
+    <div class="dropdown">
+        <button class="btn btn-primary rounded-pill px-4 dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fa fa-edit me-2"></i> Input Absensi Kelas
+        </button>
+        <ul class="dropdown-menu shadow border-0" aria-labelledby="dropdownMenuButton1" style="border-radius: 15px;">
+            <li class="dropdown-header text-uppercase small fw-bold">Pilih Kelas</li>
+            @php
+                // Ambil daftar kelas langsung dari DB untuk dropdown cepat
+                $list_kelas = DB::table('kelas')->get();
+            @endphp
+            @foreach($list_kelas as $k)
+                <li>
+                    <a class="dropdown-item py-2" href="{{ route('absensi.kelas', $k->id_kelas) }}">
+                        <i class="fa fa-chevron-right me-2 text-primary" style="font-size: 10px;"></i> {{ $k->nama_kelas }}
+                    </a>
+                </li>
+            @endforeach
+        </ul>
+    </div>
+</div>
+
     <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px; background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);">
         <div class="card-body p-4">
             <form method="get" action="{{ route('absensi.index') }}" class="row g-4">
