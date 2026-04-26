@@ -198,23 +198,27 @@ let html5QrCode = null;
 let currentFacingMode = 'environment';
 let isScanning = false;
 let isProcessing = false;
-let scanTimeout = null;
 
 // DOM Elements
-const qrReaderDiv = document.getElementById('qr-reader');
 const toggleCameraBtn = document.getElementById('toggleCameraBtn');
 const startScannerBtn = document.getElementById('startScannerBtn');
 const scannerLoading = document.getElementById('scannerLoading');
 const manualInputSection = document.getElementById('manualInputSection');
 
+// Default avatar URL (dari Laravel asset)
+const defaultAvatar = '{{ asset("assets/img/blank-profile.webp") }}';
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto start scanner if on mobile device
+    // Auto start scanner on mobile devices
     if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
         startScanner();
+    } else {
+        // On desktop, show manual input option
+        console.log('Desktop detected, manual input available');
     }
     
-    // Set focus for manual input if exists
+    // Set focus for manual input
     const manualInput = document.getElementById('manualBarcodeInput');
     if (manualInput) {
         manualInput.addEventListener('keypress', function(e) {
@@ -254,8 +258,7 @@ async function startScanner() {
         const config = {
             fps: 15,
             qrbox: { width: 280, height: 280 },
-            aspectRatio: 1.0,
-            formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
+            aspectRatio: 1.0
         };
         
         await html5QrCode.start(
@@ -285,6 +288,10 @@ async function startScanner() {
             await startScanner();
         } else {
             showAlert('error', 'Gagal mengakses kamera. Pastikan izin kamera diberikan dan coba refresh halaman.');
+            // Auto show manual input if camera fails
+            setTimeout(() => {
+                toggleManualInput();
+            }, 1000);
         }
     } finally {
         if (scannerLoading) {
@@ -356,21 +363,17 @@ async function onScanSuccess(decodedText) {
 // On Scan Failure
 function onScanFailure(error) {
     // Silent ignore - this is normal for non-QR frames
-    // Only log occasional errors to avoid console spam
     if (Math.random() < 0.01) {
         console.debug('Scan frame error:', error);
     }
 }
 
-// Process Barcode via AJAX (Better UX)
+// Process Barcode via AJAX
 async function processBarcode(barcode) {
-    // Show processing indicator
     showProcessingIndicator(true);
     
     try {
-        // ✅ Dynamic URL - ambil dari window.location
-        const baseUrl = window.location.origin;
-        const response = await fetch(`${baseUrl}/absensi/proses-api`, {
+        const response = await fetch('/absensi/proses-api', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -382,20 +385,25 @@ async function processBarcode(barcode) {
         
         const data = await response.json();
         
+        if (response.status === 403) {
+            showAlert('error', 'Akses ditolak! ' + (data.message || 'Role Anda tidak diizinkan.'));
+            setTimeout(() => {
+                resetAndRestartScanner();
+            }, 3000);
+            return;
+        }
+        
         if (data.success) {
             showAlert('success', data.message);
-            
-            // Update user info card if user data returned
             if (data.user) {
                 updateUserInfoCard(data.user);
             }
-            
-            // Auto reset scanner after 2 seconds
             setTimeout(() => {
                 resetAndRestartScanner();
+                // Redirect after 3 success scans? Optional
+                // window.location.href = '/absensi';
             }, 2000);
         } else if (response.status === 409) {
-            // Already attended
             showAlert('warning', data.message);
             if (data.user) {
                 updateUserInfoCard(data.user);
@@ -444,27 +452,30 @@ async function resetAndRestartScanner() {
 
 // Update user info card dynamically
 function updateUserInfoCard(user) {
-    const userInfoContainer = document.querySelector('#userInfoCard') || 
-                             document.createElement('div');
+    let card = document.getElementById('userInfoCard');
     
-    if (!document.querySelector('#userInfoCard')) {
+    if (!card) {
         // Create card if doesn't exist
-        const container = document.querySelector('.card.border-0.shadow-sm.mb-4');
-        if (container && container.parentNode) {
+        const scannerCard = document.querySelector('.card.border-0.shadow-sm.mb-4');
+        if (scannerCard && scannerCard.parentNode) {
             const newCard = document.createElement('div');
             newCard.id = 'userInfoCard';
             newCard.className = 'card border-0 shadow-sm fade-in mt-4';
             newCard.style.borderRadius = '20px';
             newCard.style.background = 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)';
-            container.parentNode.insertBefore(newCard, container.nextSibling);
+            scannerCard.parentNode.insertBefore(newCard, scannerCard.nextSibling);
+            card = newCard;
         }
     }
     
-    const card = document.querySelector('#userInfoCard');
     if (card && user) {
-        const fotoUrl = user.foto_profil && user.foto_profil.startsWith('http') 
+        const fotoUrl = (user.foto_profil && user.foto_profil.startsWith('http')) 
             ? user.foto_profil 
-            : '{{ asset("assets/img/blank-profile.webp") }}';
+            : defaultAvatar;
+        
+        const sudahAbsen = user.sudah_absen === true;
+        const badgeText = sudahAbsen ? 'Sudah Absen Hari Ini' : 'Terverifikasi';
+        const badgeClass = sudahAbsen ? 'bg-warning' : 'bg-success';
         
         card.innerHTML = `
             <div class="card-body p-4">
@@ -474,10 +485,10 @@ function updateUserInfoCard(user) {
                              alt="Foto Profil" 
                              class="rounded-circle border border-success border-3"
                              style="width: 100px; height: 100px; object-fit: cover;"
-                             onerror="this.src='{{ asset("assets/img/blank-profile.webp") }}'">
+                             onerror="this.src='${defaultAvatar}'">
                         <div class="mt-2">
-                            <span class="badge bg-success rounded-pill px-3 py-1">
-                                <i class="fa fa-check-circle me-1"></i> ${user.sudah_absen ? 'Sudah Absen' : 'Terverifikasi'}
+                            <span class="badge ${badgeClass} rounded-pill px-3 py-1">
+                                <i class="fa fa-check-circle me-1"></i> ${badgeText}
                             </span>
                         </div>
                     </div>
@@ -511,15 +522,32 @@ function updateUserInfoCard(user) {
 // Show alert message
 function showAlert(type, message) {
     const alertContainer = document.getElementById('alertContainer');
-    const alertClass = type === 'success' ? 'alert-success' : 
-                      (type === 'error' ? 'alert-danger' : 
-                      (type === 'warning' ? 'alert-warning' : 'alert-info'));
-    const icon = type === 'success' ? 'fa-check-circle' :
-                (type === 'error' ? 'fa-exclamation-circle' :
-                (type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'));
+    let alertClass, icon, borderColor;
+    
+    switch(type) {
+        case 'success':
+            alertClass = 'alert-success';
+            icon = 'fa-check-circle';
+            borderColor = '#16a34a';
+            break;
+        case 'error':
+            alertClass = 'alert-danger';
+            icon = 'fa-exclamation-circle';
+            borderColor = '#dc2626';
+            break;
+        case 'warning':
+            alertClass = 'alert-warning';
+            icon = 'fa-exclamation-triangle';
+            borderColor = '#ca8a04';
+            break;
+        default:
+            alertClass = 'alert-info';
+            icon = 'fa-info-circle';
+            borderColor = '#3b82f6';
+    }
     
     const alertHtml = `
-        <div class="alert ${alertClass} border-0 d-flex align-items-center mb-4 alert-dismissible fade show" style="border-left: 5px solid ${type === 'success' ? '#16a34a' : type === 'error' ? '#dc2626' : '#ca8a04'}; border-radius: 12px;">
+        <div class="alert ${alertClass} border-0 d-flex align-items-center mb-4 alert-dismissible fade show" style="border-left: 5px solid ${borderColor}; border-radius: 12px;">
             <i class="fa ${icon} fa-2x me-3 ${type === 'success' ? 'text-success' : type === 'error' ? 'text-danger' : 'text-warning'}"></i>
             <div>
                 <strong class="d-block">${type === 'success' ? 'Berhasil!' : type === 'error' ? 'Gagal!' : 'Peringatan!'}</strong>
@@ -529,43 +557,43 @@ function showAlert(type, message) {
         </div>
     `;
     
-    alertContainer.innerHTML = alertHtml + (alertContainer.innerHTML || '');
+    alertContainer.innerHTML = alertHtml;
     
     // Auto dismiss after 5 seconds
     setTimeout(() => {
-        const alerts = alertContainer.querySelectorAll('.alert');
-        if (alerts.length > 0) {
-            alerts[0].remove();
+        const alert = alertContainer.querySelector('.alert');
+        if (alert) {
+            alert.remove();
         }
     }, 5000);
 }
 
 // Show/hide processing indicator
-function showProcessingIndicator(show) {
-    const indicator = document.getElementById('processingIndicator') || createProcessingIndicator();
-    if (show) {
-        indicator.classList.remove('d-none');
-        indicator.classList.add('d-flex');
-    } else {
-        indicator.classList.add('d-none');
-        indicator.classList.remove('d-flex');
-    }
-}
+let processingIndicator = null;
 
-function createProcessingIndicator() {
-    const div = document.createElement('div');
-    div.id = 'processingIndicator';
-    div.className = 'position-fixed top-50 start-50 translate-middle bg-dark bg-opacity-75 text-white px-4 py-3 rounded-3 d-none align-items-center gap-3';
-    div.style.zIndex = '9999';
-    div.style.borderRadius = '50px';
-    div.innerHTML = `
-        <div class="spinner-border spinner-border-sm" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-        <span>Memproses absensi...</span>
-    `;
-    document.body.appendChild(div);
-    return div;
+function showProcessingIndicator(show) {
+    if (!processingIndicator) {
+        processingIndicator = document.createElement('div');
+        processingIndicator.id = 'processingIndicator';
+        processingIndicator.className = 'position-fixed top-50 start-50 translate-middle bg-dark bg-opacity-75 text-white px-4 py-3 rounded-3 d-none align-items-center gap-3';
+        processingIndicator.style.zIndex = '9999';
+        processingIndicator.style.borderRadius = '50px';
+        processingIndicator.innerHTML = `
+            <div class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <span>Memproses absensi...</span>
+        `;
+        document.body.appendChild(processingIndicator);
+    }
+    
+    if (show) {
+        processingIndicator.classList.remove('d-none');
+        processingIndicator.classList.add('d-flex');
+    } else {
+        processingIndicator.classList.add('d-none');
+        processingIndicator.classList.remove('d-flex');
+    }
 }
 
 // Toggle manual input section
@@ -575,16 +603,14 @@ function toggleManualInput() {
         manualInputSection.style.display = isVisible ? 'none' : 'block';
         
         if (!isVisible) {
-            // Stop scanner when showing manual input
             stopScanner();
         } else {
-            // Restart scanner when hiding manual input
             startScanner();
         }
     }
 }
 
-// Reset form function
+// Reset form function (for global use)
 function resetForm() {
     const manualInput = document.getElementById('manualBarcodeInput');
     if (manualInput) {
@@ -608,9 +634,8 @@ if (startScannerBtn) {
     });
 }
 
-// Auto focus on page load
+// Check camera permission on load
 window.addEventListener('load', function() {
-    // Check camera permission
     if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
         navigator.mediaDevices.enumerateDevices().then(devices => {
             const hasCamera = devices.some(device => device.kind === 'videoinput');
@@ -618,6 +643,8 @@ window.addEventListener('load', function() {
                 showAlert('warning', 'Tidak ditemukan kamera di perangkat ini. Gunakan input manual.');
                 toggleManualInput();
             }
+        }).catch(err => {
+            console.error('Error enumerating devices:', err);
         });
     }
 });
@@ -670,6 +697,12 @@ window.addEventListener('beforeunload', function() {
     #qr-reader {
         min-height: 300px;
     }
+}
+
+/* Fix untuk button saat loading */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 </style>
 @endpush
