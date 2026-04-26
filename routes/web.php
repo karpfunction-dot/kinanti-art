@@ -343,7 +343,8 @@ Route::middleware(['auth'])->group(function () {
 Route::get('/cek-env', function () {
     return [
         'cloudinary_url_env' => env('CLOUDINARY_URL') ? 'TERDETEKSI (Aman)' : 'KOSONG (Error)',
-        'cloudinary_config' => config('cloudinary.cloudinary_url') ? 'TERBACA (Aman)' : 'TIDAK TERBACA (Error)',
+        // Ganti 'cloudinary_url' menjadi 'cloud_url' sesuai isi file config kamu
+        'cloudinary_config' => config('cloudinary.cloud_url') ? 'TERBACA (Aman)' : 'TIDAK TERBACA (Error)',
         'app_env' => app()->environment(),
     ];
 });
