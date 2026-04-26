@@ -211,20 +211,13 @@ public function prosesApi(Request $request)
             ], 401);
         }
         
-        // =============================================================
-        // AMBIL ROLE USER YANG LOGIN DARI TABEL ROLES
-        // =============================================================
+        // Ambil role user yang login dari tabel roles
         $userRole = DB::table('users as u')
             ->leftJoin('roles as r', 'u.id_role', '=', 'r.id_role')
             ->where('u.id_user', $currentUser->id_user)
             ->value('r.nama_role');
         
         $userRole = strtolower(trim($userRole ?? ''));
-        
-        \Log::info('User role check', [
-            'user_id' => $currentUser->id_user,
-            'role' => $userRole
-        ]);
         
         // Cek akses
         $allowedRoles = ['admin', 'pelatih', 'manajemen'];
@@ -235,9 +228,7 @@ public function prosesApi(Request $request)
             ], 403);
         }
         
-        // =============================================================
-        // CARI USER BERDASARKAN BARCODE (TANPA u.role)
-        // =============================================================
+        // Cari user berdasarkan barcode
         $user = DB::table('users as u')
             ->leftJoin('profil_anggota as p', 'u.id_user', '=', 'p.id_user')
             ->leftJoin('roles as r', 'u.id_role', '=', 'r.id_role')
@@ -245,14 +236,13 @@ public function prosesApi(Request $request)
             ->select(
                 'u.id_user', 
                 'u.kode_barcode',
-                'r.nama_role as role',  // Hanya dari tabel roles
+                'r.nama_role as role',
                 'p.nama_lengkap',
                 'p.foto_profil'
             )
             ->first();
         
         if (!$user) {
-            \Log::warning('Barcode not found', ['barcode' => $barcode]);
             return response()->json([
                 'success' => false,
                 'message' => "Barcode '{$barcode}' tidak ditemukan di sistem."
@@ -285,7 +275,9 @@ public function prosesApi(Request $request)
             ], 409);
         }
         
-        // Simpan absensi
+        // =============================================================
+        // SIMPAN ABSENSI - SESUAI DENGAN STRUKTUR TABEL ANDA
+        // =============================================================
         $kategori = in_array(strtolower($user->role ?? ''), ['pelatih', 'manajemen', 'admin']) 
             ? 'Pelatih' 
             : 'Siswa';
@@ -299,9 +291,9 @@ public function prosesApi(Request $request)
             'kategori' => $kategori,
             'lokasi' => 'Studio',
             'keterangan' => "Absen via scanner: {$user->nama_lengkap}",
-            'status_absen' => 'tercatat',
-            'created_at' => now(),
-            'scanned_by' => $currentUser->id_user,
+            'status_absen' => 'tercatat',     // ✅ Kolom yang ada
+            'created_at' => now(),             // ✅ Kolom yang ada
+            // ❌ HAPUS 'scanned_by' karena tidak ada di tabel
         ]);
         
         return response()->json([
@@ -317,10 +309,7 @@ public function prosesApi(Request $request)
         ]);
         
     } catch (\Exception $e) {
-        \Log::error('API Scan error: ' . $e->getMessage(), [
-            'trace' => $e->getTraceAsString()
-        ]);
-        
+        \Log::error('API Scan error: ' . $e->getMessage());
         return response()->json([
             'success' => false,
             'message' => 'Terjadi kesalahan: ' . $e->getMessage()
