@@ -73,16 +73,16 @@ Route::middleware('auth')->group(function () {
         return view('pages.sedang_dibuat', ['judul' => 'Pendaftaran Siswa']);
     });
 
-    // =============================================================
-    // MANAJEMEN ABSENSI
-    // =============================================================
-    Route::prefix('absensi')->group(function () {
-        Route::get('/', [AbsensiController::class, 'index'])->name('absensi.index');
-        Route::get('/scan', [AbsensiController::class, 'scan'])->name('absensi.scan');
-        Route::post('/proses', [AbsensiController::class, 'proses'])->name('absensi.proses');
-        Route::delete('/{id}', [AbsensiController::class, 'destroy'])->name('absensi.destroy');
-    });
-
+// =============================================================
+// MANAJEMEN ABSENSI
+// =============================================================
+Route::prefix('absensi')->group(function () {
+    Route::get('/', [AbsensiController::class, 'index'])->name('absensi.index');
+    Route::get('/scan', [AbsensiController::class, 'scan'])->name('absensi.scan');
+    Route::post('/proses', [AbsensiController::class, 'proses'])->name('absensi.proses');
+    Route::post('/proses-api', [AbsensiController::class, 'prosesApi'])->name('absensi.proses.api');  // 🔥 TAMBAHKAN INI
+    Route::delete('/{id}', [AbsensiController::class, 'destroy'])->name('absensi.destroy');
+});
     // =============================================================
     // LAPORAN ABSENSI
     // =============================================================
