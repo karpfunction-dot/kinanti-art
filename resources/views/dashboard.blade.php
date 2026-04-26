@@ -124,17 +124,18 @@
                             <td class="text-muted py-2">Railway Environment</td>
                             <td class="text-end py-2"><span class="badge bg-primary">Production</span></td>
                         </tr>
-                        <tr>
-                            <td class="text-muted py-2">Cloudinary Media</td>
-                            <td class="text-end py-2">
-                                @if(env('CLOUDINARY_URL') || env('CLOUDINARY_API_KEY'))
-                                    <span class="text-success fw-bold">✔ Linked</span>
-                                    <br><small class="text-muted" style="font-size: 10px;">{{ env('CLOUDINARY_CLOUD_NAME') }}</small>
-                                @else
-                                    <span class="text-danger">✘ Not Configured</span>
-                                @endif
-                            </td>
-                        </tr>
+<tr>
+    <td class="text-muted py-2">Cloudinary Media</td>
+    <td class="text-end py-2">
+        {{-- Kita cek ke config, bukan ke env langsung --}}
+        @if(config('cloudinary.cloud_url'))
+            <span class="text-success fw-bold">✔ Linked</span>
+            <br><small class="text-muted" style="font-size: 10px;">Connected to Cloud</small>
+        @else
+            <span class="text-danger">✘ Not Configured</span>
+        @endif
+    </td>
+</tr>
                     </table>
                     
                     <div class="mt-3 p-3 rounded-3 bg-light">
