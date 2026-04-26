@@ -16,13 +16,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4 text-md-end mt-3 mt-md-0">
-            <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end">
-                <a href="{{ route('absensi.scan') }}" class="btn btn-primary px-4 py-2 shadow-sm" style="background: linear-gradient(135deg, #0f3b2c 0%, #1a5d45 100%); border-radius: 12px; border: none; font-weight: 600;">
-                    <i class="fa fa-qrcode me-2"></i> Scan Barcode
-                </a>
-            </div>
-        </div>
+        
     </div>
 
     <div class="mb-4">
