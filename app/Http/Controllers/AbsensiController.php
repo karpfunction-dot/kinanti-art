@@ -317,36 +317,23 @@ public function prosesApi(Request $request)
     }
 }
 
-    /**
-     * Remove the specified attendance record.
-     */
-    public function destroy($id)
-    {
-        try {
-            $currentUser = auth()->user();
+/**
+ * Remove the specified attendance record.
+ */
+public function destroy($id)
+{
+    try {
+        DB::table('absensi')->where('id_absensi', $id)->delete();
+        
+        // Gunakan redirect dengan HTTPS
+        return redirect()->route('absensi.index', [], 302, ['https' => true])
+            ->with('success', '✅ Data absensi berhasil dihapus.');
             
-            // Cek akses
-            if (!in_array($currentUser->role ?? '', ['admin'])) {
-                return redirect()->route('absensi.index')
-                    ->with('error', '❌ Hanya admin yang dapat menghapus data absensi.');
-            }
-            
-            $deleted = DB::table('absensi')->where('id_absensi', $id)->delete();
-            
-            if ($deleted) {
-                Log::info('Attendance deleted', ['id' => $id, 'deleted_by' => $currentUser->id_user]);
-                return redirect()->route('absensi.index')
-                    ->with('success', '✅ Data absensi berhasil dihapus.');
-            } else {
-                return redirect()->route('absensi.index')
-                    ->with('error', '❌ Data absensi tidak ditemukan.');
-            }
-        } catch (\Exception $e) {
-            Log::error('Delete failed: ' . $e->getMessage());
-            return redirect()->route('absensi.index')
-                ->with('error', '❌ Gagal menghapus data absensi: ' . $e->getMessage());
-        }
+    } catch (\Exception $e) {
+        return redirect()->route('absensi.index', [], 302, ['https' => true])
+            ->with('error', '❌ Gagal menghapus data absensi: ' . $e->getMessage());
     }
+}
     
     /**
      * Export attendance report
