@@ -18,7 +18,6 @@
         </div>
     </div>
 
-    <!-- Statistik Cards -->
     <div class="row g-4 mb-4">
         <div class="col-md-3">
             <div class="card border-0 shadow-sm" style="border-radius: 20px; background: linear-gradient(135deg, #0f3b2c 0%, #1a5d45 100%); color: white;">
@@ -74,10 +73,9 @@
         </div>
     </div>
 
-    <!-- Statistik Kehadiran Bulan Ini -->
     <div class="row mb-4">
         <div class="col-md-6">
-            <div class="card border-0 shadow-sm" style="border-radius: 20px;">
+            <div class="card border-0 shadow-sm h-100" style="border-radius: 20px;">
                 <div class="card-header bg-white border-0 py-3">
                     <h5 class="mb-0 fw-bold">Statistik Kehadiran Bulan Ini</h5>
                 </div>
@@ -105,33 +103,55 @@
                 </div>
             </div>
         </div>
+
         <div class="col-md-6">
             <div class="card border-0 shadow-sm" style="border-radius: 20px;">
-                <div class="card-header bg-white border-0 py-3">
-                    <h5 class="mb-0 fw-bold">Info Sistem</h5>
+                <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">Info & Integrasi Sistem</h5>
+                    <span class="badge bg-success bg-opacity-10 text-success">Server Online</span>
                 </div>
-                <div class="card-body">
-                    <table class="table table-borderless">
-                        <tr>
-                            <td width="40%">Laravel Version</td>
-                            <td><strong>{{ Illuminate\Foundation\Application::VERSION }}</strong></td>
+                <div class="card-body pt-0">
+                    <table class="table table-sm table-borderless">
+                        <tr class="border-bottom">
+                            <td class="text-muted py-2">Versi Framework</td>
+                            <td class="text-end py-2"><strong>Laravel {{ Illuminate\Foundation\Application::VERSION }}</strong></td>
+                        </tr>
+                        <tr class="border-bottom">
+                            <td class="text-muted py-2">Status GitHub</td>
+                            <td class="text-end py-2"><span class="text-success">● Connected (Auto-Deploy)</span></td>
+                        </tr>
+                        <tr class="border-bottom">
+                            <td class="text-muted py-2">Railway Environment</td>
+                            <td class="text-end py-2"><span class="badge bg-primary">Production</span></td>
                         </tr>
                         <tr>
-                            <td>PHP Version</td>
-                            <td><strong>{{ phpversion() }}</strong></td>
-                        </tr>
-                        <tr>
-                            <td>Server Status</td>
-                            <td><span class="badge bg-success">ONLINE</span></td>
-                        </tr>
-                        <tr>
-                            <td>Database</td>
-                            <td><span class="badge bg-info">MySQL</span></td>
+                            <td class="text-muted py-2">Cloudinary Media</td>
+                            <td class="text-end py-2">
+                                @if(env('CLOUDINARY_URL') || env('CLOUDINARY_API_KEY'))
+                                    <span class="text-success fw-bold">✔ Linked</span>
+                                    <br><small class="text-muted" style="font-size: 10px;">{{ env('CLOUDINARY_CLOUD_NAME') }}</small>
+                                @else
+                                    <span class="text-danger">✘ Not Configured</span>
+                                @endif
+                            </td>
                         </tr>
                     </table>
+                    
+                    <div class="mt-3 p-3 rounded-3 bg-light">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fab fa-github text-dark"></i>
+                            <small class="text-muted">Last sync: {{ date('d M Y, H:i') }} WIB</small>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .card { transition: transform 0.2s; }
+    .card:hover { transform: translateY(-5px); }
+    .table td { font-size: 0.9rem; }
+</style>
 @endsection
