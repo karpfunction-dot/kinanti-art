@@ -26,7 +26,15 @@
     </div>
 
     <div class="mb-4">
-        
+        <div class="d-grid gap-2 mb-4">
+    <a href="{{ route('absensi.scan') }}" class="btn btn-success py-3 shadow-sm" style="border-radius: 12px; background-color: #0f3b2c; border: none;">
+        <i class="fa fa-qrcode me-2"></i> Scan Barcode Kamera
+    </a>
+
+    <a href="{{ route('absensi.pilih_kelas') }}" class="btn btn-outline-dark py-3 shadow-sm" style="border-radius: 12px; border: 2px solid #0f3b2c; color: #0f3b2c; font-weight: 600;">
+        <i class="fa fa-list-check me-2"></i> Absensi Manual Per Kelas
+    </a>
+</div>
     </div>
 
     <div class="card border-0 shadow-sm mb-4" style="border-radius: 20px; background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);">
