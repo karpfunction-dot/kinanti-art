@@ -368,7 +368,9 @@ async function processBarcode(barcode) {
     showProcessingIndicator(true);
     
     try {
-        const response = await fetch('{{ url("/absensi/proses-api") }}', {
+        // ✅ Dynamic URL - ambil dari window.location
+        const baseUrl = window.location.origin;
+        const response = await fetch(`${baseUrl}/absensi/proses-api`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
