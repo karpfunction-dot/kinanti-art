@@ -39,8 +39,7 @@
                         <tr>
                             <td class="ps-4">
                                 <div class="d-flex align-items-center">
-                                    <img src="{{ $s->foto_profil ? asset('storage/foto_users/'.$s->foto_profil) : asset('assets/img/blank-profile.webp') }}" 
-                                         class="rounded-circle me-3" width="40" height="40" style="object-fit: cover;">
+                                    
                                     <div>
                                         <div class="fw-bold text-dark">{{ $s->nama_lengkap }}</div>
                                         <small class="text-muted">{{ $s->kode_barcode }}</small>
