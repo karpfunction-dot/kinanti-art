@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿/vendor/
 /node_modules/
 /.env
@@ -7,3 +8,14 @@
 .DS_Store
 
 
+=======
+﻿/vendor/
+/node_modules/
+/.env
+
+/.idea/
+/.vscode/
+.DS_Store
+
+
+>>>>>>> 69dd49ea370e9f0f3c1e19d3c3fe58f41aa09092

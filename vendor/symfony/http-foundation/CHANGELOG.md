@@ -1,6 +1,7 @@
 CHANGELOG
 =========
 
+<<<<<<< HEAD
 7.4
 ---
 
@@ -24,6 +25,8 @@ CHANGELOG
  * Allow `UriSigner` to use a `ClockInterface`
  * Add `UriSigner::verify()`
 
+=======
+>>>>>>> 69dd49ea370e9f0f3c1e19d3c3fe58f41aa09092
 7.2
 ---
 
@@ -63,7 +66,11 @@ CHANGELOG
  * Add `UriSigner` from the HttpKernel component
  * Add `partitioned` flag to `Cookie` (CHIPS Cookie)
  * Add argument `bool $flush = true` to `Response::send()`
+<<<<<<< HEAD
  * Make `MongoDbSessionHandler` instantiable with the mongodb extension directly
+=======
+* Make `MongoDbSessionHandler` instantiable with the mongodb extension directly
+>>>>>>> 69dd49ea370e9f0f3c1e19d3c3fe58f41aa09092
 
 6.3
 ---

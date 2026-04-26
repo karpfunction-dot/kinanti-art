@@ -1,6 +1,7 @@
 CHANGELOG
 =========
 
+<<<<<<< HEAD
 7.4
 ---
 
@@ -13,6 +14,8 @@ CHANGELOG
 
  * Add `Translator::addGlobalParameter()` to allow defining global translation parameters
 
+=======
+>>>>>>> 69dd49ea370e9f0f3c1e19d3c3fe58f41aa09092
 7.2
 ---
 

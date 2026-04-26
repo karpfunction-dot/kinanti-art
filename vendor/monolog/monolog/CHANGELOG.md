@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ### 3.10.0 (2026-01-02)
 
   * Added automatic directory cleanup in RotatingFileHandler (#2000)
@@ -14,6 +15,8 @@
   * Fixed file paths in stack traces containing backslashes on windows, always using / now to unify logs (#1980)
   * Fixed RotatingFileHandler unlink errors not being suppressed correctly (#1999)
 
+=======
+>>>>>>> 69dd49ea370e9f0f3c1e19d3c3fe58f41aa09092
 ### 3.9.0 (2025-03-24)
 
   * BC Warning: Fixed SendGridHandler to use the V3 API as V2 is now shut down, but this requires a new API key (#1952)

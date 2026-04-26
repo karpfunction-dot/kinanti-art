@@ -1,11 +1,14 @@
 CHANGELOG
 =========
 
+<<<<<<< HEAD
 7.4
 ---
 
  * Deprecate implementing `__sleep/wakeup()` on `AbstractPart` implementations; use `__(un)serialize()` instead
 
+=======
+>>>>>>> 69dd49ea370e9f0f3c1e19d3c3fe58f41aa09092
 7.0
 ---
 

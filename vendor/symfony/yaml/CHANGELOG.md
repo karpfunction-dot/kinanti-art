@@ -1,17 +1,23 @@
 CHANGELOG
 =========
 
+<<<<<<< HEAD
 7.3
 ---
 
  * Add compact nested mapping support by using the `Yaml::DUMP_COMPACT_NESTED_MAPPING` flag
  * Add the `Yaml::DUMP_FORCE_DOUBLE_QUOTES_ON_VALUES` flag to enforce double quotes around string values
 
+=======
+>>>>>>> 69dd49ea370e9f0f3c1e19d3c3fe58f41aa09092
 7.2
 ---
 
  * Deprecate parsing duplicate mapping keys whose value is `null`
+<<<<<<< HEAD
  * Add support for dumping `null` as an empty value by using the `Yaml::DUMP_NULL_AS_EMPTY` flag
+=======
+>>>>>>> 69dd49ea370e9f0f3c1e19d3c3fe58f41aa09092
 
 7.1
 ---

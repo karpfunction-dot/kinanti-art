@@ -2,6 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
+<<<<<<< HEAD
 ## [0.14.8](https://github.com/brick/math/releases/tag/0.14.8) - 2026-02-10
 
 🗑️ **Deprecations**
@@ -158,6 +159,8 @@ All notable changes to this project will be documented in this file.
 
 - `BigDecimal::ofUnscaledValue()` allows a negative scale (and converts the values to create a zero scale number)
 
+=======
+>>>>>>> 69dd49ea370e9f0f3c1e19d3c3fe58f41aa09092
 ## [0.12.3](https://github.com/brick/math/releases/tag/0.12.3) - 2025-02-28
 
 ✨ **New features**
@@ -632,3 +635,7 @@ Added `BigDecimal::divideAndRemainder()`
 ## [0.1.0](https://github.com/brick/math/releases/tag/0.1.0) - 2014-08-31
 
 First beta release.
+<<<<<<< HEAD
+=======
+
+>>>>>>> 69dd49ea370e9f0f3c1e19d3c3fe58f41aa09092

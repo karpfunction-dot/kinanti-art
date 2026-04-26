@@ -6,6 +6,7 @@ Updates should follow the [Keep a CHANGELOG](https://keepachangelog.com/) princi
 
 ## [Unreleased][unreleased]
 
+<<<<<<< HEAD
 ## [2.8.2] - 2026-03-19
 
 This is a **security release** to address an issue where the `allowed_domains` setting for the `Embed` extension can be bypassed, resulting in a possible SSRF and XSS vulnerabilities.
@@ -49,6 +50,8 @@ This is a **security release** to address a potential cross-site scripting (XSS)
 - The `AttributesExtension` blocks all attributes starting with `on` unless explicitly allowed via the `attributes/allow` config option
 - The `allow_unsafe_links` option is now respected by the `AttributesExtension` when users specify `href` and `src` attributes
 
+=======
+>>>>>>> 69dd49ea370e9f0f3c1e19d3c3fe58f41aa09092
 ## [2.6.2] - 2025-04-18
 
 ### Fixed
@@ -732,12 +735,16 @@ No changes were introduced since the previous release.
     - Alternative 1: Use `CommonMarkConverter` or `GithubFlavoredMarkdownConverter` if you don't need to customize the environment
     - Alternative 2: Instantiate a new `Environment` and add the necessary extensions yourself
 
+<<<<<<< HEAD
 [unreleased]: https://github.com/thephpleague/commonmark/compare/2.8.2...HEAD
 [2.8.2]: https://github.com/thephpleague/commonmark/compare/2.8.1...2.8.2
 [2.8.1]: https://github.com/thephpleague/commonmark/compare/2.8.0...2.8.1
 [2.8.0]: https://github.com/thephpleague/commonmark/compare/2.7.1...2.8.0
 [2.7.1]: https://github.com/thephpleague/commonmark/compare/2.7.0...2.7.1
 [2.7.0]: https://github.com/thephpleague/commonmark/compare/2.6.2...2.7.0
+=======
+[unreleased]: https://github.com/thephpleague/commonmark/compare/2.6.1...2.6.2
+>>>>>>> 69dd49ea370e9f0f3c1e19d3c3fe58f41aa09092
 [2.6.2]: https://github.com/thephpleague/commonmark/compare/2.6.1...2.6.2
 [2.6.1]: https://github.com/thephpleague/commonmark/compare/2.6.0...2.6.1
 [2.6.0]: https://github.com/thephpleague/commonmark/compare/2.5.3...2.6.0

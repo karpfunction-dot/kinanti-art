@@ -1,6 +1,7 @@
 CHANGELOG
 =========
 
+<<<<<<< HEAD
 7.4
 ---
 
@@ -11,6 +12,8 @@ CHANGELOG
 
  * Add the `AbstractString::pascal()` method
 
+=======
+>>>>>>> 69dd49ea370e9f0f3c1e19d3c3fe58f41aa09092
 7.2
 ---
 
@@ -50,7 +53,11 @@ CHANGELOG
  * added `LazyString` which provides memoizing stringable objects
  * The component is not marked as `@experimental` anymore
  * added the `s()` helper method to get either an `UnicodeString` or `ByteString` instance,
+<<<<<<< HEAD
    depending of the input string UTF-8 compliance
+=======
+   depending of the input string UTF-8 compliancy
+>>>>>>> 69dd49ea370e9f0f3c1e19d3c3fe58f41aa09092
  * added `$cut` parameter to `Symfony\Component\String\AbstractString::truncate()`
  * added `AbstractString::containsAny()`
  * allow passing a string of custom characters to `ByteString::fromRandom()`

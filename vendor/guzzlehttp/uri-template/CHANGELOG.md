@@ -4,11 +4,14 @@ All notable changes to `uri-template` will be documented in this file.
 
 Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
+<<<<<<< HEAD
 ## v1.0.5 - 2025-08-22
 
 ### Changed
 - Officially support PHP 8.5
 
+=======
+>>>>>>> 69dd49ea370e9f0f3c1e19d3c3fe58f41aa09092
 ## v1.0.4 - 2025-02-03
 
 ### Changed

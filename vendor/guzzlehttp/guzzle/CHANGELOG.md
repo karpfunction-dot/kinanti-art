@@ -2,6 +2,7 @@
 
 Please refer to [UPGRADING](UPGRADING.md) guide for upgrading to a major version.
 
+<<<<<<< HEAD
 ## 7.10.0 - 2025-08-23
 
 ### Added
@@ -13,6 +14,8 @@ Please refer to [UPGRADING](UPGRADING.md) guide for upgrading to a major version
 - Adjusted `guzzlehttp/promises` version constraint to `^2.3`
 - Adjusted `guzzlehttp/psr7` version constraint to `^2.8`
 
+=======
+>>>>>>> 69dd49ea370e9f0f3c1e19d3c3fe58f41aa09092
 
 ## 7.9.3 - 2025-03-27
 
