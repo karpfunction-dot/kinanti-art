@@ -324,3 +324,29 @@ Route::get('/cek-env', function () {
         'app_env' => app()->environment(),
     ];
 });
+
+// Auto clear cache ketika diakses via URL tertentu
+Route::get('/clear-route-cache', function () {
+    try {
+        Artisan::call('route:clear');
+        Artisan::call('config:clear');
+        Artisan::call('cache:clear');
+        Artisan::call('view:clear');
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Cache cleared successfully',
+            'output' => Artisan::output()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
+    }
+})->withoutMiddleware();
+
+// Tambahin juga route langsung untuk API (fallback)
+Route::post('/absensi-proses-api', [AbsensiController::class, 'prosesApi'])
+    ->middleware('auth')
+    ->name('absensi.proses.api.fallback');
