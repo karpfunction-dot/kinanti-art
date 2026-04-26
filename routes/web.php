@@ -11,6 +11,8 @@ use App\Http\Controllers\TugasWewenangController;
 use App\Http\Controllers\IdCardController;
 use App\Http\Controllers\DashboardController;
 
+use App\Http\Controllers\AbsensiController;
+use App\Http\Middleware\CheckRole;
 // =============================================================
 // HALAMAN PUBLIK
 // =============================================================
@@ -323,4 +325,24 @@ Route::get('/cek-env', function () {
         'cloudinary_config' => config('cloudinary.cloudinary_url') ? 'TERBACA (Aman)' : 'TIDAK TERBACA (Error)',
         'app_env' => app()->environment(),
     ];
+});
+
+/*
+|--------------------------------------------------------------------------
+| CAMERA INTERNAL
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth'])->group(function () {
+    
+    // Absensi Routes
+    Route::prefix('absensi')->group(function () {
+        Route::get('/', [AbsensiController::class, 'index'])->name('absensi.index');
+        Route::get('/scan', [AbsensiController::class, 'scan'])->name('absensi.scan');
+        Route::post('/proses', [AbsensiController::class, 'proses'])->name('absensi.proses');
+        Route::post('/proses-api', [AbsensiController::class, 'prosesApi'])->name('absensi.proses.api'); // NEW API endpoint
+        Route::delete('/{id}', [AbsensiController::class, 'destroy'])->name('absensi.destroy');
+        Route::get('/export', [AbsensiController::class, 'export'])->name('absensi.export');
+    });
+    
 });
