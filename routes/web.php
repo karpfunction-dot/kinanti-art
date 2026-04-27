@@ -216,6 +216,9 @@ Route::get('/idcard_info', function () {
 Route::get('/idcard-info', function () {
     return redirect()->route('idcard.index');
 })->middleware(['auth']);
+Route::get('/jadwal_manage', function () {
+    return redirect()->route('jadwal.index');
+})->middleware('auth');
 
 use App\Http\Controllers\JadwalController;
 
