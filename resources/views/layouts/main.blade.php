@@ -42,9 +42,12 @@
             <hr class="text-secondary mx-3">
 
             <!-- TOMBOL LOGOUT -->
-            <a href="/logout" class="text-danger">
-                <i class="fa-solid fa-right-from-bracket me-2"></i> Logout
-            </a>
+            <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <button type="submit" class="btn btn-link text-danger p-0 text-decoration-none">
+                    <i class="fa-solid fa-right-from-bracket me-2"></i> Logout
+                </button>
+            </form>
         </div>
     </nav>
 

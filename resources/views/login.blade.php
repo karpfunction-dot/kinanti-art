@@ -278,7 +278,7 @@
                 </div>
             @endif
 
-            <form action="{{ url('/login-proses') }}" method="POST">
+            <form action="{{ route('login.process') }}" method="POST">
                 @csrf
                 
                 <div class="form-group">

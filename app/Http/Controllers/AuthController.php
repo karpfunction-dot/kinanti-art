@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 
 class AuthController extends Controller
@@ -27,14 +28,14 @@ class AuthController extends Controller
 
         $user = User::with('role')->where('kode_barcode', $request->kode_barcode)->first();
 
-        // Cek Password (Plain Text)
-        if ($user && $user->password == $request->password) {
+        if ($user && $this->isValidPassword($request->password, $user)) {
             
             if ($user->aktif != 1) {
                 return back()->with('error', 'Akun Anda dinonaktifkan.');
             }
 
             Auth::login($user);
+            $request->session()->regenerate();
 
             return $this->redirectBasedOnRole($user);
         }
@@ -43,10 +44,34 @@ class AuthController extends Controller
     }
 
     // 3. Logout
-    public function logout()
+    public function logout(Request $request)
     {
         Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
         return redirect('/login');
+    }
+
+    protected function isValidPassword(string $plainPassword, User $user): bool
+    {
+        $storedPassword = (string) $user->password;
+
+        $passwordInfo = password_get_info($storedPassword);
+        $isHashedPassword = ($passwordInfo['algo'] ?? null) !== null && ($passwordInfo['algo'] ?? 0) !== 0;
+
+        if ($isHashedPassword && Hash::check($plainPassword, $storedPassword)) {
+            return true;
+        }
+
+        // Kompatibilitas akun lama yang masih tersimpan plain text.
+        if (hash_equals($storedPassword, $plainPassword)) {
+            $user->password = Hash::make($plainPassword);
+            $user->save();
+            return true;
+        }
+
+        return false;
     }
 
     // 4. Helper: Mengarahkan User sesuai Jabatan (Role ID)

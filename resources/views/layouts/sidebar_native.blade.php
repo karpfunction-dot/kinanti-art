@@ -8,14 +8,11 @@
         @php
             $nama = Auth::user()->profil->nama_lengkap ?? Auth::user()->kode_barcode ?? 'User';
             $role = ucfirst(Auth::user()->role->nama_role ?? 'Member');
-            $file_foto = Auth::user()->profil->foto_profil ?? 'default.png';
-            $foto_url = file_exists(public_path('storage/foto_users/' . $file_foto)) 
-                ? asset('storage/foto_users/' . $file_foto)
-                : asset('assets/img/blank-profile.webp');
+            $foto_url = \App\Support\PhotoUrl::resolve(Auth::user()->profil->foto_profil ?? null);
         @endphp
 
         <div class="sidebar-avatar">
-            <img src="{{ auth()->user()->profil->foto_profil ?? asset('assets/img/blank-profile.webp') }}" 
+            <img src="{{ $foto_url }}" 
      class="sidebar-user-photo" 
      alt="Foto Profil">
             <div class="avatar-status"></div>
@@ -33,6 +30,23 @@
     <ul class="sidebar-menu">
         @php
             $userRoleId = Auth::user()->id_role;
+            $normalizeMenuPage = function ($page) {
+                $normalized = trim((string) $page);
+                $normalized = trim($normalized, '/');
+
+                if ($normalized === '') {
+                    return null;
+                }
+
+                $aliases = [
+                    'jadwal_info' => 'jadwal',
+                    'jadwal-info' => 'jadwal',
+                    'idcard_info' => 'idcard',
+                    'idcard-info' => 'idcard',
+                ];
+
+                return $aliases[$normalized] ?? $normalized;
+            };
             
             $dbMenus = DB::table('menu_registry as m')
                 ->leftJoin('menu_role_access as ra', 'm.id_menu', '=', 'ra.id_menu')
@@ -65,10 +79,11 @@
 
         @forelse($menuTree as $parentMenu)
             @php $m = $parentMenu['menu']; @endphp
+            @php $parentPage = $normalizeMenuPage($m->page); @endphp
             
             @if(empty($parentMenu['children']))
                 <li>
-                    <a href="/{{ $m->page }}" class="{{ Request::is($m->page) || Request::is($m->page . '/*') ? 'active' : '' }}">
+                    <a href="{{ $parentPage ? url('/' . $parentPage) : '#' }}" class="{{ $parentPage && (Request::is($parentPage) || Request::is($parentPage . '/*')) ? 'active' : '' }}">
                         <div class="menu-icon"><i class="fa {{ $m->icon ?? 'fa-circle' }}"></i></div>
                         <span class="menu-label">{{ $m->label }}</span>
                     </a>
@@ -82,8 +97,9 @@
                     </a>
                     <ul class="submenu">
                         @foreach($parentMenu['children'] as $child)
+                            @php $childPage = $normalizeMenuPage($child->page); @endphp
                             <li>
-                                <a href="/{{ $child->page }}" class="{{ Request::is($child->page) || Request::is($child->page . '/*') ? 'active' : '' }}">
+                                <a href="{{ $childPage ? url('/' . $childPage) : '#' }}" class="{{ $childPage && (Request::is($childPage) || Request::is($childPage . '/*')) ? 'active' : '' }}">
                                     <i class="fa {{ $child->icon ?? 'fa-circle' }}"></i>
                                     <span>{{ $child->label }}</span>
                                 </a>
@@ -116,10 +132,13 @@
         
         <li class="menu-divider"></li>
         <li class="menu-logout">
-            <a href="/logout">
-                <div class="menu-icon"><i class="fa fa-right-from-bracket"></i></div>
-                <span class="menu-label">Logout</span>
-            </a>
+            <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <button type="submit" class="logout-btn">
+                    <div class="menu-icon"><i class="fa fa-right-from-bracket"></i></div>
+                    <span class="menu-label">Logout</span>
+                </button>
+            </form>
         </li>
     </ul>
 </aside>
@@ -281,6 +300,30 @@
         height: 1px;
         background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
         margin: 12px 0 !important;
+    }
+    .menu-logout a {
+        width: 100%;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        text-align: left;
+    }
+    .menu-logout .logout-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        padding: 10px 14px;
+        border-radius: 12px;
+        border: none;
+        background: transparent;
+        color: #f87171;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    .menu-logout .logout-btn:hover {
+        background: rgba(248, 113, 113, 0.1);
+        color: #fecaca;
     }
     .menu-logout a {
         color: #f87171 !important;

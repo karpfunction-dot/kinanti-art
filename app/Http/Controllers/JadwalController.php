@@ -8,30 +8,49 @@ use Illuminate\Support\Facades\Validator;
 
 class JadwalController extends Controller
 {
+    private function currentRole(): string
+    {
+        return strtolower(auth()->user()->role->nama_role ?? '');
+    }
+
+    private function canManage(): bool
+    {
+        return $this->currentRole() === 'admin';
+    }
+
     /**
      * Display a listing of jadwal.
      */
     public function index()
     {
-        if (auth()->user()->role->nama_role !== 'admin') {
+        $role = $this->currentRole();
+        $user = auth()->user();
+        $canManage = $this->canManage();
+
+        if (!in_array($role, ['admin', 'pelatih', 'siswa'], true)) {
             return redirect()->route('dashboard')->with('error', 'Akses ditolak');
         }
         
-        // Ambil data kelas aktif
-        $kelas = DB::table('kelas')
-            ->where('aktif', 1)
-            ->orderBy('id_jenjang')
-            ->orderBy('nama_kelas')
-            ->get();
+        $kelas = collect();
+        $pelatih = collect();
+
+        if ($canManage) {
+            // Ambil data kelas aktif
+            $kelas = DB::table('kelas')
+                ->where('aktif', 1)
+                ->orderBy('id_jenjang')
+                ->orderBy('nama_kelas')
+                ->get();
         
-        // Ambil data pelatih dari wewenang aktif
-        $pelatih = DB::table('wewenang as w')
-            ->join('profil_anggota as p', 'w.id_user', '=', 'p.id_user')
-            ->where('w.aktif', 1)
-            ->select('p.id_user', 'p.nama_lengkap')
-            ->distinct()
-            ->orderBy('p.nama_lengkap')
-            ->get();
+            // Ambil data pelatih dari wewenang aktif
+            $pelatih = DB::table('wewenang as w')
+                ->join('profil_anggota as p', 'w.id_user', '=', 'p.id_user')
+                ->where('w.aktif', 1)
+                ->select('p.id_user', 'p.nama_lengkap')
+                ->distinct()
+                ->orderBy('p.nama_lengkap')
+                ->get();
+        }
         
         // Ambil data jadwal dengan join
         $jadwal = DB::table('jadwal_dev as jd')
@@ -48,12 +67,35 @@ class JadwalController extends Controller
                 'jd.status',
                 'k.nama_kelas',
                 'p.nama_lengkap as nama_pelatih'
-            )
-            ->orderByRaw("FIELD(hari, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu')")
-            ->orderBy('jd.jam_mulai')
-            ->get();
+            );
+
+        if (!$canManage) {
+            $jadwal->where('jd.status', 'aktif');
+        }
+
+        if ($role === 'siswa') {
+            $activeClassIds = DB::table('kelas_siswa')
+                ->where('id_user', $user->id_user)
+                ->where('aktif', 1)
+                ->pluck('id_kelas');
+
+            if ($activeClassIds->isEmpty()) {
+                $jadwal = collect();
+            } else {
+                $jadwal = $jadwal
+                    ->whereIn('jd.id_kelas', $activeClassIds)
+                    ->orderByRaw("FIELD(hari, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu')")
+                    ->orderBy('jd.jam_mulai')
+                    ->get();
+            }
+        } else {
+            $jadwal = $jadwal
+                ->orderByRaw("FIELD(hari, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu')")
+                ->orderBy('jd.jam_mulai')
+                ->get();
+        }
         
-        return view('jadwal.index', compact('kelas', 'pelatih', 'jadwal'));
+        return view('jadwal.index', compact('kelas', 'pelatih', 'jadwal', 'canManage', 'role'));
     }
     
     /**
@@ -61,6 +103,13 @@ class JadwalController extends Controller
      */
     public function store(Request $request)
     {
+        if (!$this->canManage()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak'
+            ], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'hari' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu,Minggu',
             'jam_mulai' => 'required|date_format:H:i',
@@ -111,6 +160,13 @@ class JadwalController extends Controller
      */
     public function update(Request $request, $id)
     {
+        if (!$this->canManage()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak'
+            ], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'hari' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu,Minggu',
             'jam_mulai' => 'required|date_format:H:i',
@@ -161,6 +217,13 @@ class JadwalController extends Controller
      */
     public function destroy($id)
     {
+        if (!$this->canManage()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak'
+            ], 403);
+        }
+
         try {
             DB::table('jadwal_dev')->where('id_jadwal', $id)->delete();
             return response()->json([
@@ -180,6 +243,13 @@ class JadwalController extends Controller
      */
     public function getJadwal($id)
     {
+        if (!$this->canManage()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak'
+            ], 403);
+        }
+
         $jadwal = DB::table('jadwal_dev')->where('id_jadwal', $id)->first();
         if ($jadwal) {
             return response()->json(['success' => true, 'data' => $jadwal]);

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use App\Support\PhotoUrl;
 
 class ProfilController extends Controller
 {
@@ -30,6 +31,10 @@ class ProfilController extends Controller
         if ($filter_role) $query->where('u.id_role', $filter_role);
 
         $profiles = $query->orderBy('p.nama_lengkap', 'asc')->get();
+        $profiles->transform(function ($profile) {
+            $profile->foto_url = PhotoUrl::resolve($profile->foto_profil ?? null);
+            return $profile;
+        });
         $roles = DB::table('roles')->orderBy('nama_role', 'asc')->get();
 
         return view('settings.profil.index', compact('profiles', 'roles', 'search', 'filter_role'));
@@ -46,6 +51,7 @@ class ProfilController extends Controller
             ->first();
 
         if (!$profile) return redirect()->route('profil.index')->with('error', 'Profil tidak ditemukan');
+        $profile->foto_url = PhotoUrl::resolve($profile->foto_profil ?? null);
 
         $roles = DB::table('roles')->orderBy('nama_role', 'asc')->get();
         return view('settings.profil.edit', compact('profile', 'roles'));
@@ -57,7 +63,7 @@ class ProfilController extends Controller
         $validator = Validator::make($request->all(), [
             'nama_lengkap' => 'required|string|max:100',
             'email'        => 'nullable|email|unique:profil_anggota,email,' . $id . ',id_user',
-            'foto'         => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'foto_profil'  => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'id_role'      => 'required|exists:roles,id_role',
         ]);
 
@@ -74,8 +80,8 @@ class ProfilController extends Controller
             ];
 
             // Cek jika ada upload foto baru
-            if ($request->hasFile('foto')) {
-                $file = $request->file('foto');
+            $file = $request->file('foto_profil') ?? $request->file('foto');
+            if ($file) {
 
                 $uploadedFileUrl = Cloudinary::upload($file->getRealPath(), [
                     'folder' => 'foto_users',

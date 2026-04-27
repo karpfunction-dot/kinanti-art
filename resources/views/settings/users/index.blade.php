@@ -113,7 +113,7 @@
                 </div>
             </div>
             <div class="info-note">
-                <i class="fa fa-info-circle"></i> Password default: <strong>kinanti123</strong>
+                <i class="fa fa-info-circle"></i> Password sementara dibuat otomatis saat pengguna ditambahkan.
             </div>
         </form>
     </div>
@@ -523,7 +523,7 @@
     }
     
     function resetPassword(id) {
-        if (confirm('Reset password pengguna ini ke default (kinanti123)?')) {
+        if (confirm('Reset password pengguna ini? Password sementara baru akan dibuat otomatis.')) {
             fetch('/settings/users/' + id + '/reset-password', {
                 method: 'POST',
                 headers: {

@@ -10,14 +10,13 @@ use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\TugasWewenangController;
 use App\Http\Controllers\IdCardController;
 use App\Http\Controllers\DashboardController;
-use Illuminate\Support\Facades\Artisan;
 // =============================================================
 // HALAMAN PUBLIK
 // =============================================================
 Route::get('/', [AuthController::class, 'showForm'])->name('login');
 Route::get('/login', [AuthController::class, 'showForm']);
-Route::post('/login-proses', [AuthController::class, 'processLogin']);
-Route::get('/logout', [AuthController::class, 'logout']);
+Route::post('/login-proses', [AuthController::class, 'processLogin'])->name('login.process');
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
 // =============================================================
 // HALAMAN YANG MEMERLUKAN LOGIN
@@ -96,13 +95,15 @@ Route::prefix('absensi')->group(function () {
 // =============================================================
 // CLEAR CACHE ROUTE (Emergency)
 // =============================================================
-Route::get('/clear-cache', function () {
+Route::post('/clear-cache', function () {
+    abort_unless(app()->isLocal(), 404);
+
     try {
         \Illuminate\Support\Facades\Artisan::call('route:clear');
         \Illuminate\Support\Facades\Artisan::call('config:clear');
         \Illuminate\Support\Facades\Artisan::call('cache:clear');
         \Illuminate\Support\Facades\Artisan::call('view:clear');
-        
+
         return response()->json([
             'success' => true,
             'message' => 'All cache cleared successfully!',
@@ -114,7 +115,7 @@ Route::get('/clear-cache', function () {
             'message' => $e->getMessage()
         ], 500);
     }
-});
+})->middleware('role:admin')->name('system.clear-cache');
     // =============================================================
     // LAPORAN ABSENSI
     // =============================================================
@@ -197,6 +198,23 @@ Route::get('/kelas_entri', function () {
 
 Route::get('/kelas_naik', function () {
     return redirect('/kelas/naik');
+})->middleware(['auth']);
+
+// Redirect kompatibilitas menu lama
+Route::get('/jadwal_info', function () {
+    return redirect()->route('jadwal.index');
+})->middleware(['auth']);
+
+Route::get('/jadwal-info', function () {
+    return redirect()->route('jadwal.index');
+})->middleware(['auth']);
+
+Route::get('/idcard_info', function () {
+    return redirect()->route('idcard.index');
+})->middleware(['auth']);
+
+Route::get('/idcard-info', function () {
+    return redirect()->route('idcard.index');
 })->middleware(['auth']);
 
 use App\Http\Controllers\JadwalController;
@@ -284,7 +302,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/video/upload', [VideoController::class, 'uploadForm'])->name('video.upload');
     Route::post('/video/upload', [VideoController::class, 'upload'])->name('video.upload.process');
     Route::get('/video/stream', [VideoController::class, 'stream'])->name('video.stream');
-    Route::get('/video/delete', [VideoController::class, 'delete'])->name('video.delete');
+    Route::delete('/video/delete', [VideoController::class, 'delete'])->name('video.delete');
 });
 
 
@@ -349,14 +367,17 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/video/player/{id}', [VideoInventarisController::class, 'player'])->name('video.player');
 });
 
-Route::get('/cek-env', function () {
-    return [
-        'cloudinary_url_env' => env('CLOUDINARY_URL') ? 'TERDETEKSI (Aman)' : 'KOSONG (Error)',
-        // Ganti 'cloudinary_url' menjadi 'cloud_url' sesuai isi file config kamu
-        'cloudinary_config' => config('cloudinary.cloud_url') ? 'TERBACA (Aman)' : 'TIDAK TERBACA (Error)',
-        'app_env' => app()->environment(),
-    ];
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/cek-env', function () {
+        abort_unless(app()->isLocal(), 404);
+
+        return [
+            'cloudinary_url_env' => env('CLOUDINARY_URL') ? 'TERDETEKSI (Aman)' : 'KOSONG (Error)',
+            // Ganti 'cloudinary_url' menjadi 'cloud_url' sesuai isi file config kamu
+            'cloudinary_config' => config('cloudinary.cloud_url') ? 'TERBACA (Aman)' : 'TIDAK TERBACA (Error)',
+            'app_env' => app()->environment(),
+        ];
+    })->name('system.cek-env');
 });
 
-Route::get('/debug-role', [AbsensiController::class, 'debugRole'])->middleware('auth');
 Route::get('/absensi/pilih-kelas', [AbsensiController::class, 'pilihKelas'])->name('absensi.pilih_kelas');

@@ -137,11 +137,11 @@ class VideoController extends Controller
         }
         
         $idLagu = $request->get('id_lagu');
-        $fileName = rawurldecode($request->get('file'));
-        
-        $videoPath = public_path('assets/video/' . $idLagu . '/' . $fileName);
-        
-        if (!File::exists($videoPath)) {
+        $fileName = rawurldecode((string) $request->get('file'));
+
+        $videoPath = $this->resolveVideoPath($idLagu, $fileName);
+
+        if (!$videoPath || !File::exists($videoPath)) {
             abort(404, 'Video tidak ditemukan');
         }
         
@@ -164,16 +164,53 @@ class VideoController extends Controller
             return redirect()->route('video.index')->with('error', 'Akses ditolak');
         }
         
-        $idLagu = $request->get('id_lagu');
-        $fileName = rawurldecode($request->get('file'));
-        
-        $videoPath = public_path('assets/video/' . $idLagu . '/' . $fileName);
-        
-        if (File::exists($videoPath)) {
+        $validated = $request->validate([
+            'id_lagu' => 'required|integer',
+            'file' => 'required|string',
+        ]);
+
+        $videoPath = $this->resolveVideoPath($validated['id_lagu'], $validated['file']);
+
+        if ($videoPath && File::exists($videoPath)) {
             File::delete($videoPath);
             return redirect()->route('video.index')->with('success', 'Video berhasil dihapus');
         }
         
         return redirect()->route('video.index')->with('error', 'Video tidak ditemukan');
+    }
+
+    private function resolveVideoPath($idLagu, string $fileName): ?string
+    {
+        if (!is_numeric($idLagu)) {
+            return null;
+        }
+
+        $cleanName = basename($fileName);
+        if ($cleanName !== $fileName) {
+            return null;
+        }
+
+        if (!preg_match('/\A[a-zA-Z0-9._-]+\z/', $cleanName)) {
+            return null;
+        }
+
+        $baseDir = realpath(public_path('assets/video/' . (int) $idLagu));
+        if ($baseDir === false) {
+            return null;
+        }
+
+        $candidatePath = $baseDir . DIRECTORY_SEPARATOR . $cleanName;
+        $realPath = realpath($candidatePath);
+
+        if ($realPath === false) {
+            return null;
+        }
+
+        $baseWithSep = rtrim($baseDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        if (!str_starts_with($realPath, $baseWithSep)) {
+            return null;
+        }
+
+        return $realPath;
     }
 }

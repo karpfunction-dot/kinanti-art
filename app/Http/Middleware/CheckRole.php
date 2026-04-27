@@ -19,25 +19,22 @@ class CheckRole
         if (!Auth::check()) {
             return redirect()->route('login');
         }
-        
+
         $user = Auth::user();
-        // Sesuaikan dengan field role di tabel users Anda
-        $userRole = $user->role ?? $user->nama_role ?? 'user';
-        
-        // Jika tidak ada role yang direquired atau user punya role yang diizinkan
-        if (empty($roles) || in_array($userRole, $roles)) {
+        $userRole = strtolower($user->role->nama_role ?? $user->nama_role ?? '');
+        $allowedRoles = array_map('strtolower', $roles);
+
+        if (empty($allowedRoles) || in_array($userRole, $allowedRoles, true)) {
             return $next($request);
         }
-        
-        // Untuk AJAX request
+
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Akses ditolak. Anda tidak memiliki izin.'
+                'message' => 'Akses ditolak. Anda tidak memiliki izin.',
             ], 403);
         }
-        
-        // Untuk web request
-        return redirect()->back()->with('error', '❌ Akses ditolak! Hanya admin dan pelatih yang dapat melakukan absensi.');
+
+        return redirect()->back()->with('error', 'Akses ditolak. Anda tidak memiliki izin.');
     }
 }

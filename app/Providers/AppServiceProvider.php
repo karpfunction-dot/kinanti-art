@@ -27,9 +27,12 @@ class AppServiceProvider extends ServiceProvider
         // ==========================================
         // FORCE HTTPS UNTUK SEMUA PROSES
         // ==========================================
-        
-        // Force semua route menggunakan HTTPS di production
-        if ($this->app->environment('production')) {
+
+        $appUrlHost = parse_url((string) config('app.url'), PHP_URL_HOST);
+        $isLocalHost = in_array($appUrlHost, ['localhost', '127.0.0.1'], true);
+
+        // Force semua route menggunakan HTTPS di production (kecuali localhost)
+        if ($this->app->environment('production') && !$isLocalHost) {
             URL::forceScheme('https');
             
             // Set root URL ke HTTPS

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Support\PhotoUrl;
 
 class DashboardController extends Controller
 {
@@ -16,7 +17,7 @@ class DashboardController extends Controller
         // 1. Ambil data profil (Untuk Nama & Foto Cloudinary)
         $profil = DB::table('profil_anggota')->where('id_user', $user->id_user)->first();
         $nama = $profil->nama_lengkap ?? 'User';
-        $foto = $profil->foto_profil ?? 'https://ui-avatars.com/api/?name='.urlencode($nama);
+        $foto = PhotoUrl::resolve($profil->foto_profil ?? null);
 
         // --- DASHBOARD ADMIN & MANAJEMEN (Role 1 & 2) ---
 if ($role_id == 1 || $role_id == 2) {

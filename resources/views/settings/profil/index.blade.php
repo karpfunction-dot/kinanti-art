@@ -83,7 +83,7 @@
                     @forelse($profiles as $profile)
                     <tr>
                         <td>
-                           <img src="{{ $profile->foto_profil ?? asset('assets/img/blank-profile.webp') }}" 
+                           <img src="{{ $profile->foto_url ?? \App\Support\PhotoUrl::resolve($profile->foto_profil ?? null) }}" 
      class="profile-thumb" 
      alt="foto">
                         </td>

@@ -13,12 +13,19 @@
                 </div>
                 <div>
                     <h1 style="color: #0f3b2c; font-weight: 700; font-size: 1.75rem; margin: 0;">ID Card Anggota</h1>
-                    <p class="text-muted small mb-0 mt-1">Cetak kartu identitas anggota Sanggar Tari</p>
+                    <p class="text-muted small mb-0 mt-1">
+                        @if($isAdmin)
+                            Cetak kartu identitas seluruh anggota Sanggar Tari
+                        @else
+                            Lihat dan cetak kartu identitas akun Anda
+                        @endif
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 
+    @if($isAdmin)
     <!-- Filter Card -->
     <div class="filter-card">
         <form method="GET" action="{{ route('idcard.index') }}" class="filter-form">
@@ -50,6 +57,7 @@
             </div>
         </form>
     </div>
+    @endif
 
     <!-- Members Table -->
     <div class="table-card">
@@ -97,7 +105,7 @@
                         <td><code>{{ $member->kode_barcode ?? '-' }}</code></td>
                         <td class="text-center">
                             <a href="{{ route('idcard.preview', $member->id_user) }}" target="_blank" class="btn-print">
-                                <i class="fa fa-print"></i> Cetak ID Card
+                                <i class="fa fa-print"></i> {{ $isAdmin ? 'Cetak ID Card' : 'Lihat ID Card' }}
                             </a>
                         </td>
                     </tr>

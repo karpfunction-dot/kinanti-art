@@ -1,6 +1,8 @@
 /vendor/
 /node_modules/
 .env
+/public/uploads/
+/public/assets/video/
 /.idea/
 /.vscode/
 .DS_Store

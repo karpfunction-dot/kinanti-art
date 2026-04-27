@@ -1,6 +1,6 @@
 @extends('layouts.admin_layout')
 
-@section('title', 'Manajemen Jadwal - Kinanti Art')
+@section('title', 'Jadwal Sanggar - Kinanti Art')
 
 @section('content')
 <div class="container-fluid py-4">
@@ -12,8 +12,16 @@
                     <i class="fa fa-calendar-alt fa-2x text-success"></i>
                 </div>
                 <div>
-                    <h1 style="color: #0f3b2c; font-weight: 700; font-size: 1.75rem; margin: 0;">Manajemen Jadwal</h1>
-                    <p class="text-muted small mb-0 mt-1">Kelola jadwal latihan dan kegiatan sanggar</p>
+                    <h1 style="color: #0f3b2c; font-weight: 700; font-size: 1.75rem; margin: 0;">Jadwal Sanggar</h1>
+                    <p class="text-muted small mb-0 mt-1">
+                        @if($canManage)
+                            Kelola jadwal latihan dan kegiatan sanggar
+                        @elseif($role === 'pelatih')
+                            Menampilkan semua jadwal aktif sanggar
+                        @else
+                            Menampilkan jadwal aktif sesuai kelas Anda
+                        @endif
+                    </p>
                 </div>
             </div>
         </div>
@@ -34,9 +42,11 @@
                 <i class="fa fa-table-list"></i>
                 <h5>Daftar Jadwal</h5>
             </div>
+            @if($canManage)
             <button class="btn-tambah" onclick="openJadwalModal()">
                 <i class="fa fa-plus"></i> Tambah Jadwal
             </button>
+            @endif
         </div>
         <div class="table-responsive">
             <table class="data-table">
@@ -50,7 +60,9 @@
                         <th>Lokasi</th>
                         <th>Kategori</th>
                         <th>Status</th>
+                        @if($canManage)
                         <th>Aksi</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
@@ -70,6 +82,7 @@
                                 <span class="status-badge status-inactive">Nonaktif</span>
                             @endif
                         </td>
+                        @if($canManage)
                         <td>
                             <div class="action-buttons">
                                 <button class="btn-edit" onclick="editJadwal({{ $j->id_jadwal }})" title="Edit">
@@ -80,10 +93,11 @@
                                 </button>
                             </div>
                         </td>
+                        @endif
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="text-center">Belum ada data jadwal</td>
+                        <td colspan="{{ $canManage ? 9 : 8 }}" class="text-center">Belum ada data jadwal</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -92,6 +106,7 @@
     </div>
 </div>
 
+@if($canManage)
 <!-- Modal Jadwal -->
 <div id="modalJadwal" class="modal" style="display: none;">
     <div class="modal-content">
@@ -184,6 +199,7 @@
         </form>
     </div>
 </div>
+@endif
 
 <style>
     .table-card {
@@ -367,6 +383,7 @@
         setTimeout(() => { alertContainer.innerHTML = ''; }, 3000);
     }
     
+    @if($canManage)
     function openJadwalModal() {
         document.getElementById('formJadwal').reset();
         document.getElementById('editJadwalId').value = '';
@@ -453,5 +470,6 @@
             event.target.style.display = 'none';
         }
     }
+    @endif
 </script>
 @endsection

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -60,10 +61,11 @@ class UserController extends Controller
         
         try {
             DB::beginTransaction();
+            $temporaryPassword = Str::upper(Str::random(10));
             
             $id_user = DB::table('users')->insertGetId([
                 'kode_barcode' => $request->kode_barcode,
-                'password' => Hash::make('kinanti123'),
+                'password' => Hash::make($temporaryPassword),
                 'id_role' => $request->id_role,
                 'aktif' => $request->aktif ?? 1,
                 'created_at' => now(),
@@ -81,7 +83,7 @@ class UserController extends Controller
             DB::commit();
             
             return redirect()->route('settings.users')
-                ->with('success', '✅ Pengguna baru berhasil ditambahkan (password default: kinanti123)');
+                ->with('success', 'Pengguna baru berhasil ditambahkan. Password sementara: ' . $temporaryPassword);
                 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -194,14 +196,16 @@ class UserController extends Controller
     public function resetPassword($id)
     {
         try {
+            $temporaryPassword = Str::upper(Str::random(10));
+
             DB::table('users')->where('id_user', $id)->update([
-                'password' => Hash::make('kinanti123'),
+                'password' => Hash::make($temporaryPassword),
                 // HAPUS: 'updated_at' => now(),
             ]);
             
             return response()->json([
                 'success' => true,
-                'message' => '🔑 Password direset ke: kinanti123'
+                'message' => 'Password berhasil direset. Password sementara: ' . $temporaryPassword
             ]);
         } catch (\Exception $e) {
             return response()->json([

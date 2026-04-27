@@ -88,11 +88,15 @@
                                     <small>{{ \Illuminate\Support\Str::limit($video['name'], 50) }}</small>
                                 </div>
                                 @if(in_array($role, ['admin', 'pelatih', 'manajemen']))
-                                    <a href="{{ route('video.delete', ['id_lagu' => $idLagu, 'file' => rawurlencode($video['name'])]) }}" 
-                                       class="btn-delete"
-                                       onclick="return confirm('Hapus video {{ $video['name'] }}?')">
-                                        <i class="fa fa-trash"></i> Hapus
-                                    </a>
+                                    <form action="{{ route('video.delete') }}" method="POST" onsubmit="return confirm('Hapus video {{ $video['name'] }}?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <input type="hidden" name="id_lagu" value="{{ $idLagu }}">
+                                        <input type="hidden" name="file" value="{{ $video['name'] }}">
+                                        <button type="submit" class="btn-delete">
+                                            <i class="fa fa-trash"></i> Hapus
+                                        </button>
+                                    </form>
                                 @endif
                             </div>
                             
@@ -305,7 +309,6 @@
     
     .btn-delete {
         color: #dc2626;
-        text-decoration: none;
         font-size: 12px;
         display: inline-flex;
         align-items: center;
@@ -313,6 +316,8 @@
         padding: 5px 10px;
         border-radius: 6px;
         background: #fee2e2;
+        border: none;
+        cursor: pointer;
         transition: all 0.2s;
     }
     .btn-delete:hover {

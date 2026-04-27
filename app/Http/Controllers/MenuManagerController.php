@@ -9,6 +9,29 @@ use Illuminate\Support\Facades\Log;
 
 class MenuManagerController extends Controller
 {
+    private function normalizeMenuPage(?string $page): ?string
+    {
+        if ($page === null) {
+            return null;
+        }
+
+        $normalized = trim($page);
+        $normalized = trim($normalized, '/');
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        $aliases = [
+            'jadwal_info' => 'jadwal',
+            'jadwal-info' => 'jadwal',
+            'idcard_info' => 'idcard',
+            'idcard-info' => 'idcard',
+        ];
+
+        return $aliases[$normalized] ?? $normalized;
+    }
+
     public function index()
     {
         if (auth()->user()->role->nama_role !== 'admin') {
@@ -69,9 +92,11 @@ class MenuManagerController extends Controller
     try {
         DB::beginTransaction();
         
+        $normalizedPage = $this->normalizeMenuPage($request->page);
+
         // Cek apakah page sudah ada (untuk menghindari duplicate)
         $existing = DB::table('menu_registry')
-            ->where('page', $request->page)
+            ->where('page', $normalizedPage)
             ->where('id_parent', $request->id_parent ?: null)
             ->first();
         
@@ -83,13 +108,13 @@ class MenuManagerController extends Controller
         }
         
         $id_menu = DB::table('menu_registry')->insertGetId([
-            'id_parent' => $request->id_parent ?: null,
-            'label' => $request->label,
-            'icon' => $request->icon,
-            'page' => $request->page,
-            'order_index' => $request->order_index ?? 0,
-            'aktif' => $request->aktif ?? 1,
-            'created_at' => now(),
+                'id_parent' => $request->id_parent ?: null,
+                'label' => $request->label,
+                'icon' => $request->icon,
+                'page' => $normalizedPage,
+                'order_index' => $request->order_index ?? 0,
+                'aktif' => $request->aktif ?? 1,
+                'created_at' => now(),
             'updated_at' => now(),
         ]);
         
@@ -147,13 +172,15 @@ class MenuManagerController extends Controller
     
     try {
         DB::beginTransaction();
+
+        $normalizedPage = $this->normalizeMenuPage($request->page);
         
         // ✅ UPDATE menu_registry - TANPA id_role
         DB::table('menu_registry')->where('id_menu', $id)->update([
             'id_parent' => $request->id_parent ?: null,
             'label' => $request->label,
             'icon' => $request->icon,
-            'page' => $request->page,
+            'page' => $normalizedPage,
             'order_index' => $request->order_index ?? 0,
             'aktif' => $request->aktif ?? 1,
             'updated_at' => now(),
@@ -215,4 +242,3 @@ class MenuManagerController extends Controller
 
     
 }
-

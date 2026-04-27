@@ -154,10 +154,9 @@ class WhatsAppController extends Controller
                 $template .= "Berikut adalah informasi akun Anda:\n";
                 $template .= "━━━━━━━━━━━━━━━━━━━━━\n";
                 $template .= "📌 *Kode Barcode*: {{kode_barcode}}\n";
-                $template .= "🔑 *Password*: kinanti123\n";
                 $template .= "━━━━━━━━━━━━━━━━━━━━━\n\n";
                 $template .= "Silakan login menggunakan kode barcode di atas.\n";
-                $template .= "Jangan lupa untuk mengganti password setelah login.\n\n";
+                $template .= "Untuk password sementara, hubungi admin sanggar.\n\n";
                 $template .= "_Pesan ini dikirim otomatis oleh sistem._";
                 break;
                 
