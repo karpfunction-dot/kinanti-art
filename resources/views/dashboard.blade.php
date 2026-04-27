@@ -12,7 +12,7 @@
                 </div>
                 <div>
                     <h1 style="color: #0f3b2c; font-weight: 700; font-size: 1.75rem; margin: 0;">Dashboard</h1>
-                    <p class="text-muted small mb-0 mt-1">Selamat datang, {{ Auth::user()->profil->nama_lengkap ?? Auth::user()->kode_barcode }}</p>
+                    <p class="text-muted small mb-0 mt-1">Selamat datang, {{ Auth::user()->profil?->nama_lengkap ?? Auth::user()->kode_barcode ?? 'User' }}</p>
                 </div>
             </div>
         </div>

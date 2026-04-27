@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Constants\RoleConstant;
+use App\Services\MenuService;
 
 class KelasController extends Controller
 {
@@ -13,7 +15,10 @@ class KelasController extends Controller
      */
     public function index()
     {
-        if (auth()->user()->role->nama_role !== 'admin') {
+        $user = auth()->user();
+        
+        // Check if user is admin or management
+        if (!RoleConstant::isAdminOrManagement($user->id_role)) {
             return redirect()->route('dashboard')->with('error', 'Akses ditolak');
         }
         

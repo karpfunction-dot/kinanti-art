@@ -90,6 +90,15 @@
             border-radius: 30px;
         }
         
+        /* Display user info safely */
+        .user-info {
+            color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+        
         /* MAIN CONTENT */
         .main-content {
             margin-top: 70px;
@@ -138,10 +147,10 @@
             <span class="brand-text">Kinanti Art Productions</span>
         </div>
         <div class="header-right">
-            <span class="user-name">
+            <span class="user-name user-info">
                 <i class="fa fa-user-circle me-2"></i>
-                {{ Auth::user()->profil->nama_lengkap ?? Auth::user()->kode_barcode ?? 'Admin' }}
-                <small>({{ ucfirst(Auth::user()->role->nama_role ?? 'Guest') }})</small>
+                {{ Auth::user()->profil?->nama_lengkap ?? Auth::user()->kode_barcode ?? 'Admin' }}
+                <small>({{ ucfirst(Auth::user()->role?->nama_role ?? 'Guest') }})</small>
             </span>
         </div>
     </header>

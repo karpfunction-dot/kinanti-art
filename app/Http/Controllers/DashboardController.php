@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Support\PhotoUrl;
+use App\Constants\RoleConstant;
+use App\Services\MenuService;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -13,27 +15,43 @@ class DashboardController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $role_id = $user->id_role; 
+        $role_id = $user->id_role;
 
         // Ambil data profil
         $profil = DB::table('profil_anggota')->where('id_user', $user->id_user)->first();
         $nama = $profil->nama_lengkap ?? 'User';
         $foto = PhotoUrl::resolve($profil->foto_profil ?? null);
 
+        // Get menu data untuk semua view
+        $menuData = MenuService::getMenuTree($role_id);
+
         // ==============================
         // ADMIN & MANAJEMEN (Role 1 & 2)
         // ==============================
-        if ($role_id == 1 || $role_id == 2) {
+        if ($role_id === RoleConstant::ADMIN || $role_id === RoleConstant::MANAJEMEN) {
 
-            $total_siswa = DB::table('users')->where('id_role', 4)->count();
-            $total_pelatih = DB::table('users')->where('id_role', 3)->count();
+            $total_siswa = DB::table('users')->where('id_role', RoleConstant::SISWA)->count();
+            $total_pelatih = DB::table('users')->where('id_role', RoleConstant::PELATIH)->count();
             $absensi_hari_ini = DB::table('absensi')->whereDate('tanggal', date('Y-m-d'))->count();
             $data_kelas = DB::table('kelas')->get();
 
+            $now = Carbon::now();
             $statistik = [
-                'hadir' => DB::table('absensi')->whereMonth('tanggal', date('m'))->where('status', 'Hadir')->count(),
-                'izin'  => DB::table('absensi')->whereMonth('tanggal', date('m'))->where('status', 'Izin')->count(),
-                'alfa'  => DB::table('absensi')->whereMonth('tanggal', date('m'))->where('status', 'Alfa')->count(),
+                'hadir' => DB::table('absensi')
+                    ->whereMonth('tanggal', $now->month)
+                    ->whereYear('tanggal', $now->year)
+                    ->where('status', 'Hadir')
+                    ->count(),
+                'izin'  => DB::table('absensi')
+                    ->whereMonth('tanggal', $now->month)
+                    ->whereYear('tanggal', $now->year)
+                    ->where('status', 'Izin')
+                    ->count(),
+                'alfa'  => DB::table('absensi')
+                    ->whereMonth('tanggal', $now->month)
+                    ->whereYear('tanggal', $now->year)
+                    ->where('status', 'Alfa')
+                    ->count(),
             ];
 
             return view('dashboard.admin', compact(
@@ -43,14 +61,15 @@ class DashboardController extends Controller
                 'data_kelas', 
                 'nama', 
                 'foto', 
-                'statistik'
+                'statistik',
+                'menuData'
             ));
         }
 
         // ==============================
         // PELATIH (Role 3)
         // ==============================
-        elseif ($role_id == 3) {
+        elseif ($role_id === RoleConstant::PELATIH) {
 
             $hari_indo = $this->getHariIndo(date('l'));
 
@@ -70,14 +89,15 @@ class DashboardController extends Controller
                 'jadwal_hari_ini', 
                 'total_mengajar', 
                 'nama', 
-                'foto'
+                'foto',
+                'menuData'
             ));
         }
 
         // ==============================
-        // SISWA (Role 4) 🔥 FIX DI SINI
+        // SISWA (Role 4)
         // ==============================
-        elseif ($role_id == 4) {
+        elseif ($role_id === RoleConstant::SISWA) {
 
             $userId = $user->id_user;
 
@@ -93,7 +113,6 @@ class DashboardController extends Controller
                 ->limit(5)
                 ->get();
 
-            // 🔥 INI YANG SEBELUMNYA HILANG
             $kehadiran_bulan_ini = DB::table('absensi')
                 ->where('id_user', $userId)
                 ->whereMonth('tanggal', Carbon::now()->month)
@@ -106,7 +125,8 @@ class DashboardController extends Controller
                 'riwayat_absensi',
                 'kehadiran_bulan_ini',
                 'nama',
-                'foto'
+                'foto',
+                'menuData'
             ));
         }
 

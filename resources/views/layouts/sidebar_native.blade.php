@@ -6,9 +6,9 @@
     <!-- BAGIAN PROFIL USER -->
     <div class="sidebar-profile">
         @php
-            $nama = Auth::user()->profil->nama_lengkap ?? Auth::user()->kode_barcode ?? 'User';
-            $role = ucfirst(Auth::user()->role->nama_role ?? 'Member');
-            $foto_url = \App\Support\PhotoUrl::resolve(Auth::user()->profil->foto_profil ?? null);
+            $nama = Auth::user()->profil?->nama_lengkap ?? Auth::user()->kode_barcode ?? 'User';
+            $role = ucfirst(Auth::user()->role?->nama_role ?? 'Member');
+            $foto_url = \App\Support\PhotoUrl::resolve(Auth::user()->profil?->foto_profil ?? null);
         @endphp
 
         <div class="sidebar-avatar">
@@ -29,7 +29,6 @@
     <!-- MENU DINAMIS DARI DATABASE -->
     <ul class="sidebar-menu">
         @php
-            $userRoleId = Auth::user()->id_role;
             $normalizeMenuPage = function ($page) {
                 $normalized = trim((string) $page);
                 $normalized = trim($normalized, '/');
@@ -48,33 +47,8 @@
                 return $aliases[$normalized] ?? $normalized;
             };
             
-            $dbMenus = DB::table('menu_registry as m')
-                ->leftJoin('menu_role_access as ra', 'm.id_menu', '=', 'ra.id_menu')
-                ->where('m.aktif', 1)
-                ->where(function($q) use ($userRoleId) {
-                    $q->where('ra.id_role', $userRoleId)
-                      ->orWhereNull('ra.id_menu');
-                })
-                ->select('m.*')
-                ->orderByRaw('COALESCE(m.id_parent, 0)')
-                ->orderBy('m.order_index')
-                ->orderBy('m.id_menu')
-                ->get();
-            
-            $menuTree = [];
-            foreach ($dbMenus as $menu) {
-                if (is_null($menu->id_parent)) {
-                    $menuTree[$menu->id_menu] = [
-                        'menu' => $menu,
-                        'children' => []
-                    ];
-                }
-            }
-            foreach ($dbMenus as $menu) {
-                if (!is_null($menu->id_parent) && isset($menuTree[$menu->id_parent])) {
-                    $menuTree[$menu->id_parent]['children'][] = $menu;
-                }
-            }
+            // Get menu from controller (passed via menuData)
+            $menuTree = $menuData ?? [];
         @endphp
 
         @forelse($menuTree as $parentMenu)
