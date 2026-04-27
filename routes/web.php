@@ -381,3 +381,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 });
 
 Route::get('/absensi/pilih-kelas', [AbsensiController::class, 'pilihKelas'])->name('absensi.pilih_kelas');
+Route::get('/info/jadwal_kelas', function () {
+    return redirect()->route('jadwal.index');
+})->middleware('auth');
+
+Route::get('/info/idcard_info', function () {
+    return redirect()->route('idcard.index');
+})->middleware('auth');
