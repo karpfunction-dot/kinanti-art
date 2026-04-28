@@ -14,6 +14,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
+            'inject-menu' => \App\Http\Middleware\InjectMenuData::class,
+        ]);
+        
+        // Apply menu injection to web middleware group (all authenticated routes)
+        $middleware->web([
+            \App\Http\Middleware\InjectMenuData::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

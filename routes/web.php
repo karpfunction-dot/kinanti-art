@@ -391,3 +391,5 @@ Route::get('/info/jadwal_kelas', function () {
 Route::get('/info/idcard_info', function () {
     return redirect()->route('idcard.index');
 })->middleware('auth');
+
+Route::get('/transaksi-saya', [TransaksiController::class, 'infoSiswa'])->middleware('auth')->name('transaksi.saya');

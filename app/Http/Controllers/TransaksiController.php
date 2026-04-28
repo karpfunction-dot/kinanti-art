@@ -763,71 +763,67 @@ public function laporanKeuangan(Request $request)
      * Siswa view their own transactions (read-only)
      */
     public function infoSiswa()
-    {
-        $user = auth()->user();
-        
-        // Only allow siswa (role 4) and themselves
-        if ($user->id_role != 4) {
-            return redirect()->route('dashboard')->with('error', 'Akses hanya untuk siswa');
-        }
+{
+    $user = auth()->user();
 
-        $userId = $user->id_user;
-        $profil = $user->profil ?? null;
-
-        // Get all transactions for this siswa
-        $transaksiSpp = DB::table('transaksi_spp')
-            ->where('id_user', $userId)
-            ->select(
-                'id_transaksi_spp as id',
-                DB::raw("'SPP' as jenis"),
-                'periode as detail',
-                'tanggal_pembayaran',
-                'total',
-                'keterangan'
-            )
-            ->orderBy('tanggal_pembayaran', 'desc');
-
-        $transaksiTabungan = DB::table('transaksi_tabungan')
-            ->where('id_user', $userId)
-            ->select(
-                'id_transaksi_tabungan as id',
-                DB::raw("'Tabungan' as jenis"),
-                'jenis as detail',
-                'tanggal_pembayaran',
-                'total',
-                'keterangan'
-            )
-            ->orderBy('tanggal_pembayaran', 'desc');
-
-        $transaksiLainnya = DB::table('transaksi_lainnya')
-            ->where('id_user', $userId)
-            ->select(
-                'id_transaksi_lainnya as id',
-                DB::raw("'Lainnya' as jenis"),
-                'kategori as detail',
-                'tanggal_pembayaran',
-                'total',
-                'keterangan'
-            )
-            ->orderBy('tanggal_pembayaran', 'desc');
-
-        $transaksi = $transaksiSpp
-            ->union($transaksiTabungan)
-            ->union($transaksiLainnya)
-            ->orderBy('tanggal_pembayaran', 'desc')
-            ->get();
-
-        // Calculate summary
-        $summary = [
-            'total_spp' => DB::table('transaksi_spp')->where('id_user', $userId)->sum('total'),
-            'total_tabungan_setor' => DB::table('transaksi_tabungan')->where('id_user', $userId)->where('jenis', 'Setor')->sum('total'),
-            'total_tabungan_tarik' => DB::table('transaksi_tabungan')->where('id_user', $userId)->where('jenis', 'Tarik')->sum('total'),
-            'total_lainnya' => DB::table('transaksi_lainnya')->where('id_user', $userId)->sum('total'),
-        ];
-
-        $summary['saldo_tabungan'] = $summary['total_tabungan_setor'] - $summary['total_tabungan_tarik'];
-        $summary['total_semua'] = $summary['total_spp'] + $summary['total_lainnya'];
-
-        return view('transaksi.info-siswa', compact('transaksi', 'summary', 'profil'));
+    // Validasi hanya siswa
+    if (!$user || $user->id_role != 4) {
+        return redirect()->route('dashboard')->with('error', 'Akses hanya untuk siswa');
     }
+
+    $userId = $user->id_user;
+    $profil = $user->profil ?? null;
+
+    // Query SPP
+    $spp = DB::table('transaksi_spp')
+        ->where('id_user', $userId)
+        ->select(
+            DB::raw("'SPP' as jenis"),
+            'periode as detail',
+            'tanggal_pembayaran',
+            'total',
+            'keterangan'
+        );
+
+    // Query Tabungan
+    $tabungan = DB::table('transaksi_tabungan')
+        ->where('id_user', $userId)
+        ->select(
+            DB::raw("'Tabungan' as jenis"),
+            'jenis as detail',
+            'tanggal_pembayaran',
+            'total',
+            'keterangan'
+        );
+
+    // Query Lainnya
+    $lainnya = DB::table('transaksi_lainnya')
+        ->where('id_user', $userId)
+        ->select(
+            DB::raw("'Lainnya' as jenis"),
+            'kategori as detail',
+            'tanggal_pembayaran',
+            'total',
+            'keterangan'
+        );
+
+    // UNION FIX (AMAN)
+    $transaksi = DB::query()->fromSub(
+        $spp->union($tabungan)->union($lainnya),
+        't'
+    )->orderBy('tanggal_pembayaran', 'desc')->get();
+
+    // SUMMARY
+    $summary = [
+        'total_spp' => DB::table('transaksi_spp')->where('id_user', $userId)->sum('total'),
+        'setor' => DB::table('transaksi_tabungan')->where('id_user', $userId)->where('jenis', 'Setor')->sum('total'),
+        'tarik' => DB::table('transaksi_tabungan')->where('id_user', $userId)->where('jenis', 'Tarik')->sum('total'),
+        'lainnya' => DB::table('transaksi_lainnya')->where('id_user', $userId)->sum('total'),
+    ];
+
+    $summary['saldo'] = $summary['setor'] - $summary['tarik'];
+    $summary['total_semua'] = $summary['total_spp'] + $summary['lainnya'];
+
+    return view('transaksi.info-siswa', compact('transaksi', 'summary', 'profil'));
+}
 }

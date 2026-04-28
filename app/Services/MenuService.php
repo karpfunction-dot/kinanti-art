@@ -15,25 +15,48 @@ class MenuService
      * @param int $userRoleId
      * @return array
      */
-    public static function getMenuTree(int $userRoleId): array
+    public static function getMenuTree(?int $userRoleId): array
     {
-        $dbMenus = DB::table('menu_registry as m')
-            ->leftJoin('menu_role_access as ra', 'm.id_menu', '=', 'ra.id_menu')
-            ->where('m.aktif', 1)
-            ->where(function($q) use ($userRoleId) {
-                $q->where('ra.id_role', $userRoleId)
-                  ->orWhereNull('ra.id_menu');
-            })
-            ->select('m.*')
-            ->orderByRaw('COALESCE(m.id_parent, 0)')
-            ->orderBy('m.order_index')
-            ->orderBy('m.id_menu')
-            ->get();
-        
+        // Get all active menus
+        $allMenus = DB::table('menu_registry')
+            ->where('aktif', 1)
+            ->orderByRaw('COALESCE(id_parent, 0)')
+            ->orderBy('order_index')
+            ->orderBy('id_menu')
+            ->get()
+            ->keyBy('id_menu');
+
+        // Get all role restrictions for this specific role
+        $accessibleMenuIds = DB::table('menu_role_access')
+            ->where('id_role', $userRoleId)
+            ->pluck('id_menu')
+            ->toArray();
+
+        // Get menus that have ANY role restrictions (these are restricted menus)
+        $restrictedMenuIds = DB::table('menu_role_access')
+            ->distinct('id_menu')
+            ->pluck('id_menu')
+            ->toArray();
+
+        // Filter menus based on role access logic:
+        // - If menu is NOT in restricted list, show it (unrestricted menu)
+        // - If menu IS in restricted list, only show if user has access
+        $visibleMenus = [];
+        foreach ($allMenus as $menu) {
+            if (!in_array($menu->id_menu, $restrictedMenuIds)) {
+                // Menu has no role restrictions - show to everyone
+                $visibleMenus[$menu->id_menu] = $menu;
+            } elseif (in_array($menu->id_menu, $accessibleMenuIds)) {
+                // Menu has role restrictions but user has access
+                $visibleMenus[$menu->id_menu] = $menu;
+            }
+        }
+
+        // Build menu tree from visible menus
         $menuTree = [];
         
         // Build parent menus
-        foreach ($dbMenus as $menu) {
+        foreach ($visibleMenus as $menu) {
             if (is_null($menu->id_parent)) {
                 $menuTree[$menu->id_menu] = [
                     'menu' => $menu,
@@ -43,7 +66,7 @@ class MenuService
         }
         
         // Attach child menus
-        foreach ($dbMenus as $menu) {
+        foreach ($visibleMenus as $menu) {
             if (!is_null($menu->id_parent) && isset($menuTree[$menu->id_parent])) {
                 $menuTree[$menu->id_parent]['children'][] = $menu;
             }
