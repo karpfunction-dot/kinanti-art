@@ -208,41 +208,43 @@ class AbsensiController extends Controller
     }
 
     /**
+     * Menampilkan halaman pilih kelas untuk absen manual.
+     */
+    public function pilihKelas()
+    {
+        $kelas = DB::table('kelas')->where('aktif', 1)->get();
+        return view('absensi.pilih_kelas', compact('kelas'));
+    }
+
+    /**
      * Menampilkan daftar siswa per kelas untuk absen manual.
      */
     public function inputKelas($id_kelas)
-{
-    // Mengambil info kelas
-    $kelas = DB::table('kelas')->where('id_kelas', $id_kelas)->first();
-    if (!$kelas) {
-        return redirect()->route('absensi.pilih_kelas')->with('error', 'Kelas tidak ditemukan.');
+    {
+        // Mengambil info kelas
+        $kelas = DB::table('kelas')->where('id_kelas', $id_kelas)->first();
+        if (!$kelas) {
+            return redirect()->route('absensi.pilih_kelas')->with('error', 'Kelas tidak ditemukan.');
+        }
+
+        // QUERY DIPERBAIKI: Menggunakan tabel 'kelas_siswa' sesuai database Anda
+        $siswas = DB::table('kelas_siswa as ks')
+            ->join('users as u', 'ks.id_user', '=', 'u.id_user')
+            ->join('profil_anggota as p', 'u.id_user', '=', 'p.id_user')
+            ->leftJoin('roles as r', 'u.id_role', '=', 'r.id_role')
+            ->where('ks.id_kelas', $id_kelas)
+            ->where('ks.aktif', 1) // Hanya siswa yang aktif di kelas tersebut
+            ->select('u.id_user', 'u.kode_barcode', 'p.nama_lengkap', 'p.foto_profil', 'r.nama_role')
+            ->get();
+
+        $absensi_hari_ini = DB::table('absensi')
+            ->where('id_kelas', $id_kelas)
+            ->whereDate('tanggal', date('Y-m-d'))
+            ->pluck('status', 'id_user')
+            ->toArray();
+
+        return view('absensi.input_massal', compact('siswas', 'kelas', 'absensi_hari_ini'));
     }
-
-    // QUERY DIPERBAIKI: Menggunakan tabel 'kelas_siswa' sesuai database Anda
-    $siswas = DB::table('kelas_siswa as ks')
-        ->join('users as u', 'ks.id_user', '=', 'u.id_user')
-        ->join('profil_anggota as p', 'u.id_user', '=', 'p.id_user')
-        ->leftJoin('roles as r', 'u.id_role', '=', 'r.id_role')
-        ->where('ks.id_kelas', $id_kelas)
-        ->where('ks.aktif', 1) // Hanya siswa yang aktif di kelas tersebut
-        ->select('u.id_user', 'u.kode_barcode', 'p.nama_lengkap', 'p.foto_profil', 'r.nama_role')
-        ->get();
-
-    $absensi_hari_ini = DB::table('absensi')
-        ->where('id_kelas', $id_kelas)
-        ->whereDate('tanggal', date('Y-m-d'))
-        ->pluck('status', 'id_user')
-        ->toArray();
-
-    return view('absensi.input_massal', compact('siswas', 'kelas', 'absensi_hari_ini'));
-}
-
-// Tambahkan fungsi ini untuk halaman khusus pilih kelas
-public function pilihKelas()
-{
-    $kelas = DB::table('kelas')->where('aktif', 1)->get();
-    return view('absensi.pilih_kelas', compact('kelas'));
-}
 
     /**
      * Menyimpan data absensi massal.
@@ -253,45 +255,64 @@ public function pilihKelas()
         $statuses = $request->status; 
         $currentUser = auth()->user();
 
-        if (!$statuses) {
-            return redirect()->back()->with('error', 'Tidak ada data kehadiran yang dipilih.');
+        if (!$id_kelas) {
+            return redirect()->back()->with('error', '❌ ID Kelas tidak valid.');
+        }
+
+        if (!$statuses || !is_array($statuses) || count($statuses) == 0) {
+            return redirect()->back()->with('error', '❌ Tidak ada data kehadiran yang dipilih.');
         }
 
         DB::beginTransaction();
         try {
             foreach ($statuses as $id_user => $status) {
+                // Skip jika status kosong
+                if (empty($status)) {
+                    continue;
+                }
+
                 $user = DB::table('users as u')
                     ->leftJoin('roles as r', 'u.id_role', '=', 'r.id_role')
                     ->where('u.id_user', $id_user)
                     ->select('u.kode_barcode', 'r.nama_role')
                     ->first();
 
-                $kategori = (strtolower($user->nama_role ?? '') == 'siswa') ? 'Siswa' : 'Pelatih';
+                if (!$user) {
+                    continue;
+                }
 
-                DB::table('absensi')->updateOrInsert(
-                    [
-                        'id_user' => $id_user,
-                        'id_kelas' => $id_kelas,
-                        'tanggal' => date('Y-m-d')
-                    ],
-                    [
-                        'kode_barcode' => $user->kode_barcode,
-                        'waktu' => date('H:i:s'),
-                        'status' => $status,
-                        'kategori' => $kategori,
-                        'lokasi' => 'Studio',
-                        'keterangan' => "Diinput manual oleh: " . ($currentUser->profil->nama_lengkap ?? $currentUser->name),
-                        'status_absen' => 'tercatat',
-                        'updated_at' => now(),
-                        'created_at' => now()
-                    ]
-                );
+                // Tentukan kategori berdasarkan role (case-insensitive)
+                $roleName = strtolower($user->nama_role ?? '');
+                $kategori = ($roleName === 'siswa' || $roleName === 'member') ? 'Siswa' : 'Pelatih';
+
+                // Siapkan data untuk insert/update
+                $absensiData = [
+                    'id_user' => $id_user,
+                    'id_kelas' => $id_kelas,
+                    'tanggal' => date('Y-m-d')
+                ];
+
+                $updateData = [
+                    'kode_barcode' => $user->kode_barcode ?? null, // Boleh null jika tanpa barcode
+                    'waktu' => date('H:i:s'),
+                    'status' => $status,
+                    'kategori' => $kategori,
+                    'lokasi' => 'Studio',
+                    'keterangan' => "Diinput manual oleh: " . ($currentUser->profil->nama_lengkap ?? $currentUser->name),
+                    'status_absen' => 'tercatat',
+                    'updated_at' => now(),
+                    'created_at' => now()
+                ];
+
+                DB::table('absensi')->updateOrInsert($absensiData, $updateData);
             }
+            
             DB::commit();
-            return redirect()->route('absensi.index')->with('success', '✅ Data berhasil disimpan!');
+            return redirect()->route('absensi.index')->with('success', '✅ Data absensi berhasil disimpan!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', '❌ Gagal: ' . $e->getMessage());
+            Log::error('Error dalam storeMassal: ' . $e->getMessage(), ['exception' => $e]);
+            return redirect()->back()->with('error', '❌ Gagal menyimpan: ' . $e->getMessage());
         }
     }
 

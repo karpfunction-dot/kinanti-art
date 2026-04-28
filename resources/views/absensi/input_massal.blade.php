@@ -21,7 +21,7 @@
             </div>
         </div>
 
-        <form action="{{ route('absensi.storeMassal') }}" method="POST">
+        <form action="{{ route('absensi.storeMassal') }}" method="POST" id="formAbsensi">
             @csrf
             <input type="hidden" name="id_kelas" value="{{ $kelas->id_kelas }}">
             
@@ -48,7 +48,7 @@
                             </td>
                             <td class="text-center">
                                 <div class="btn-group shadow-none" role="group">
-                                    <input type="radio" class="btn-check" name="status[{{ $s->id_user }}]" id="h{{ $s->id_user }}" value="Hadir" {{ $statusExisting == 'Hadir' ? 'checked' : '' }} required>
+                                    <input type="radio" class="btn-check" name="status[{{ $s->id_user }}]" id="h{{ $s->id_user }}" value="Hadir" {{ $statusExisting == 'Hadir' ? 'checked' : '' }}>
                                     <label class="btn btn-outline-success px-3" for="h{{ $s->id_user }}">H</label>
 
                                     <input type="radio" class="btn-check" name="status[{{ $s->id_user }}]" id="i{{ $s->id_user }}" value="Izin" {{ $statusExisting == 'Izin' ? 'checked' : '' }}>
@@ -96,6 +96,37 @@
             }
         });
     }
+
+    // Validasi form sebelum submit
+    document.getElementById('formAbsensi').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        let rows = document.querySelectorAll('#tableSiswa tbody tr');
+        let unselected = [];
+        
+        rows.forEach(row => {
+            // Skip jika row tidak terlihat (tersembunyi oleh search)
+            if (row.style.display === 'none') {
+                return;
+            }
+            
+            let studentName = row.querySelector('.fw-bold').innerText;
+            let statusInputs = row.querySelectorAll('input[type="radio"]');
+            let isChecked = Array.from(statusInputs).some(input => input.checked);
+            
+            if (!isChecked) {
+                unselected.push(studentName);
+            }
+        });
+        
+        if (unselected.length > 0) {
+            alert('❌ Silakan pilih status kehadiran untuk siswa berikut:\n\n' + unselected.join('\n'));
+            return false;
+        }
+        
+        // Jika validasi lulus, submit form
+        this.submit();
+    });
 </script>
 
 <style>
