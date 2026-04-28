@@ -217,7 +217,7 @@ class AbsensiController extends Controller
     }
 
     /**
-     * Menampilkan daftar siswa per kelas untuk absen manual.
+     * Menampilkan daftar siswa per kelas untuk absen manual tanpa barcode.
      */
     public function inputKelas($id_kelas)
     {
