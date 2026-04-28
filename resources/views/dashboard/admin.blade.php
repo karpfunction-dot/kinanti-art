@@ -4,7 +4,8 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    {{-- ... (Header & Statistik Atas tetap sama) ... --}}
+
+    {{-- HEADER --}}
     <div class="row mb-4">
         <div class="col-12">
             <div class="d-flex align-items-center gap-3">
@@ -19,11 +20,10 @@
         </div>
     </div>
 
-    {{-- Statistik Row --}}
+    {{-- STATISTIK ATAS --}}
     <div class="row g-4 mb-4">
-        {{-- ... (Total Kelas, Siswa, dll tetap sama) ... --}}
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm" style="border-radius: 20px; background: linear-gradient(135deg, #0f3b2c 0%, #1a5d45 100%); color: white;">
+        <div class="col-md-3 col-sm-6">
+            <div class="card border-0 shadow-sm dashboard-card" style="border-radius: 20px; background: linear-gradient(135deg, #0f3b2c 0%, #1a5d45 100%); color: white;">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -35,33 +35,33 @@
                 </div>
             </div>
         </div>
-        {{-- ... dst ... --}}
     </div>
 
-    {{-- BAGIAN YANG DIUBAH: Tambahkan gy-4 di sini --}}
-    <div class="row gy-4 mb-4">
+    {{-- BAGIAN UTAMA (FIX PROPORSI DI SINI) --}}
+    <div class="row g-4 mb-4 align-items-stretch">
+
         {{-- Statistik Kehadiran --}}
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100" style="border-radius: 20px;">
+        <div class="col-lg-5 col-md-6 col-12 d-flex">
+            <div class="card border-0 shadow-sm w-100 dashboard-card" style="border-radius: 20px;">
                 <div class="card-header bg-white border-0 py-3 text-dark">
                     <h5 class="mb-0 fw-bold">Statistik Kehadiran (Bulan Ini)</h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body d-flex flex-column justify-content-center">
                     <div class="row text-center">
-                        <div class="col-4">
-                            <div class="p-3 rounded-3 bg-success bg-opacity-10">
+                        <div class="col">
+                            <div class="p-3 rounded-3 bg-success bg-opacity-10 stat-box">
                                 <h3 class="text-success mb-0 fw-bold">{{ $statistik['hadir'] }}</h3>
                                 <small class="text-muted">Hadir</small>
                             </div>
                         </div>
-                        <div class="col-4">
-                            <div class="p-3 rounded-3 bg-warning bg-opacity-10">
+                        <div class="col">
+                            <div class="p-3 rounded-3 bg-warning bg-opacity-10 stat-box">
                                 <h3 class="text-warning mb-0 fw-bold">{{ $statistik['izin'] }}</h3>
                                 <small class="text-muted">Izin</small>
                             </div>
                         </div>
-                        <div class="col-4">
-                            <div class="p-3 rounded-3 bg-danger bg-opacity-10">
+                        <div class="col">
+                            <div class="p-3 rounded-3 bg-danger bg-opacity-10 stat-box">
                                 <h3 class="text-danger mb-0 fw-bold">{{ $statistik['alfa'] }}</h3>
                                 <small class="text-muted">Alfa</small>
                             </div>
@@ -72,26 +72,32 @@
         </div>
 
         {{-- Info & Integrasi --}}
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100" style="border-radius: 20px;">
+        <div class="col-lg-7 col-md-6 col-12 d-flex">
+            <div class="card border-0 shadow-sm w-100 dashboard-card" style="border-radius: 20px;">
                 <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold text-dark">Info & Integrasi Sistem</h5>
                     <span class="badge bg-success bg-opacity-10 text-success">Server Online</span>
                 </div>
-                <div class="card-body pt-0">
-                    <table class="table table-sm table-borderless">
-                        {{-- ... (Isi tabel tetap sama) ... --}}
+
+                <div class="card-body pt-0 d-flex flex-column justify-content-between">
+                    <table class="table table-sm table-borderless mb-3">
                         <tr class="border-bottom">
                             <td class="text-muted py-2">Versi Framework</td>
-                            <td class="text-end py-2"><strong>Laravel {{ Illuminate\Foundation\Application::VERSION }}</strong></td>
+                            <td class="text-end py-2">
+                                <strong>Laravel {{ Illuminate\Foundation\Application::VERSION }}</strong>
+                            </td>
                         </tr>
                         <tr class="border-bottom">
                             <td class="text-muted py-2">Status GitHub</td>
-                            <td class="text-end py-2"><span class="text-success">● Connected (Railway Auto-Deploy)</span></td>
+                            <td class="text-end py-2">
+                                <span class="text-success">● Connected (Railway Auto-Deploy)</span>
+                            </td>
                         </tr>
                         <tr class="border-bottom">
                             <td class="text-muted py-2">Environment</td>
-                            <td class="text-end py-2"><span class="badge bg-primary">Production</span></td>
+                            <td class="text-end py-2">
+                                <span class="badge bg-primary">Production</span>
+                            </td>
                         </tr>
                         <tr>
                             <td class="text-muted py-2">Cloudinary Media</td>
@@ -104,8 +110,8 @@
                             </td>
                         </tr>
                     </table>
-                    
-                    <div class="mt-3 p-3 rounded-3 bg-light">
+
+                    <div class="p-3 rounded-3 bg-light mt-auto">
                         <div class="d-flex align-items-center gap-2">
                             <i class="fab fa-github text-dark"></i>
                             <small class="text-muted">Sync: {{ date('d M Y, H:i') }} WIB</small>
@@ -114,12 +120,44 @@
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 
 <style>
-    .card { transition: transform 0.2s; }
-    .card:hover { transform: translateY(-5px); }
-    .table td { font-size: 0.9rem; }
+/* 🔥 BIAR PROPORSIONAL TANPA UBAH LOGIC */
+.dashboard-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-box {
+    min-height: 90px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Hover tetap */
+.card {
+    transition: transform 0.2s;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+
+/* Table kecil tetap rapi */
+.table td {
+    font-size: 0.9rem;
+}
+
+/* Responsive spacing */
+@media (max-width: 768px) {
+    .stat-box {
+        min-height: 70px;
+    }
+}
 </style>
+
 @endsection
