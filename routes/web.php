@@ -362,12 +362,20 @@ use App\Http\Controllers\VideoInventarisController;
 
 // Route untuk Inventaris Video
 Route::middleware(['auth'])->group(function () {
-    Route::get('/video/inventaris', [VideoInventarisController::class, 'index'])->name('video.inventaris');
-    Route::post('/video/inventaris', [VideoInventarisController::class, 'store']);
-    Route::get('/video/inventaris/{id}', [VideoInventarisController::class, 'getVideo']);
-    Route::put('/video/inventaris/{id}', [VideoInventarisController::class, 'update']);
-    Route::delete('/video/inventaris/{id}', [VideoInventarisController::class, 'destroy']);
-    Route::get('/video/player/{id}', [VideoInventarisController::class, 'player'])->name('video.player');
+
+    Route::prefix('video/inventaris')->group(function () {
+
+        Route::get('/', [VideoInventarisController::class, 'index'])->name('video.inventaris');
+        Route::get('/player/{id}', [VideoInventarisController::class, 'player'])->name('video.player');
+
+        // Admin only
+        Route::post('/store', [VideoInventarisController::class, 'store'])->name('video.store');
+        Route::get('/get/{id}', [VideoInventarisController::class, 'getVideo'])->name('video.get');
+        Route::put('/update/{id}', [VideoInventarisController::class, 'update'])->name('video.update');
+        Route::delete('/delete/{id}', [VideoInventarisController::class, 'destroy'])->name('video.delete');
+
+    });
+
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
