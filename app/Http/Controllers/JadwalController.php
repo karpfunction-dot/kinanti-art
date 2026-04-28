@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 
 class JadwalController extends Controller
@@ -15,12 +16,24 @@ class JadwalController extends Controller
 
     private function canManage(): bool
     {
+        // kalau mau admin + manajemen, ubah ke:
+        // return in_array($this->currentRole(), ['admin', 'manajemen'], true);
         return $this->currentRole() === 'admin';
     }
 
-    /**
-     * Display a listing of jadwal.
-     */
+    private function withTimestamps(string $table, array $payload, bool $isUpdate = false): array
+    {
+        if (!$isUpdate && Schema::hasColumn($table, 'created_at')) {
+            $payload['created_at'] = now();
+        }
+
+        if ($isUpdate && Schema::hasColumn($table, 'updated_at')) {
+            $payload['updated_at'] = now();
+        }
+
+        return $payload;
+    }
+
     public function index()
     {
         $role = $this->currentRole();
@@ -30,19 +43,17 @@ class JadwalController extends Controller
         if (!in_array($role, ['admin', 'pelatih', 'siswa'], true)) {
             return redirect()->route('dashboard')->with('error', 'Akses ditolak');
         }
-        
+
         $kelas = collect();
         $pelatih = collect();
 
         if ($canManage) {
-            // Ambil data kelas aktif
             $kelas = DB::table('kelas')
                 ->where('aktif', 1)
                 ->orderBy('id_jenjang')
                 ->orderBy('nama_kelas')
                 ->get();
-        
-            // Ambil data pelatih dari wewenang aktif
+
             $pelatih = DB::table('wewenang as w')
                 ->join('profil_anggota as p', 'w.id_user', '=', 'p.id_user')
                 ->where('w.aktif', 1)
@@ -51,8 +62,7 @@ class JadwalController extends Controller
                 ->orderBy('p.nama_lengkap')
                 ->get();
         }
-        
-        // Ambil data jadwal dengan join
+
         $jadwal = DB::table('jadwal_dev as jd')
             ->leftJoin('kelas as k', 'jd.id_kelas', '=', 'k.id_kelas')
             ->leftJoin('profil_anggota as p', 'jd.id_pelatih', '=', 'p.id_user')
@@ -94,20 +104,14 @@ class JadwalController extends Controller
                 ->orderBy('jd.jam_mulai')
                 ->get();
         }
-        
+
         return view('jadwal.index', compact('kelas', 'pelatih', 'jadwal', 'canManage', 'role'));
     }
-    
-    /**
-     * Store a newly created jadwal.
-     */
+
     public function store(Request $request)
     {
         if (!$this->canManage()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Akses ditolak'
-            ], 403);
+            return response()->json(['success' => false, 'message' => 'Akses ditolak'], 403);
         }
 
         $validator = Validator::make($request->all(), [
@@ -121,16 +125,13 @@ class JadwalController extends Controller
             'keterangan' => 'nullable|string',
             'status' => 'required|in:aktif,nonaktif',
         ]);
-        
+
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => $validator->errors()->first()
-            ]);
+            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
         }
-        
+
         try {
-            DB::table('jadwal_dev')->insert([
+            $payload = [
                 'hari' => $request->hari,
                 'jam_mulai' => $request->jam_mulai,
                 'jam_selesai' => $request->jam_selesai,
@@ -140,31 +141,21 @@ class JadwalController extends Controller
                 'kategori' => $request->kategori,
                 'keterangan' => $request->keterangan,
                 'status' => $request->status,
-                'created_at' => now(),
-            ]);
-            
-            return response()->json([
-                'success' => true,
-                'message' => '✅ Jadwal baru berhasil ditambahkan'
-            ]);
+            ];
+            $payload = $this->withTimestamps('jadwal_dev', $payload, false);
+
+            DB::table('jadwal_dev')->insert($payload);
+
+            return response()->json(['success' => true, 'message' => '✅ Jadwal baru berhasil ditambahkan']);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menambahkan: ' . $e->getMessage()
-            ]);
+            return response()->json(['success' => false, 'message' => 'Gagal menambahkan: ' . $e->getMessage()], 500);
         }
     }
-    
-    /**
-     * Update the specified jadwal.
-     */
+
     public function update(Request $request, $id)
     {
         if (!$this->canManage()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Akses ditolak'
-            ], 403);
+            return response()->json(['success' => false, 'message' => 'Akses ditolak'], 403);
         }
 
         $validator = Validator::make($request->all(), [
@@ -178,16 +169,13 @@ class JadwalController extends Controller
             'keterangan' => 'nullable|string',
             'status' => 'required|in:aktif,nonaktif',
         ]);
-        
+
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => $validator->errors()->first()
-            ]);
+            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
         }
-        
+
         try {
-            DB::table('jadwal_dev')->where('id_jadwal', $id)->update([
+            $payload = [
                 'hari' => $request->hari,
                 'jam_mulai' => $request->jam_mulai,
                 'jam_selesai' => $request->jam_selesai,
@@ -197,63 +185,42 @@ class JadwalController extends Controller
                 'kategori' => $request->kategori,
                 'keterangan' => $request->keterangan,
                 'status' => $request->status,
-                'updated_at' => now(),
-            ]);
-            
-            return response()->json([
-                'success' => true,
-                'message' => '✏️ Jadwal berhasil diperbarui'
-            ]);
+            ];
+            $payload = $this->withTimestamps('jadwal_dev', $payload, true);
+
+            DB::table('jadwal_dev')->where('id_jadwal', $id)->update($payload);
+
+            return response()->json(['success' => true, 'message' => '✏️ Jadwal berhasil diperbarui']);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal memperbarui: ' . $e->getMessage()
-            ]);
+            return response()->json(['success' => false, 'message' => 'Gagal memperbarui: ' . $e->getMessage()], 500);
         }
     }
-    
-    /**
-     * Remove the specified jadwal.
-     */
+
     public function destroy($id)
     {
         if (!$this->canManage()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Akses ditolak'
-            ], 403);
+            return response()->json(['success' => false, 'message' => 'Akses ditolak'], 403);
         }
 
         try {
             DB::table('jadwal_dev')->where('id_jadwal', $id)->delete();
-            return response()->json([
-                'success' => true,
-                'message' => '🗑️ Jadwal berhasil dihapus'
-            ]);
+            return response()->json(['success' => true, 'message' => '🗑️ Jadwal berhasil dihapus']);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menghapus: ' . $e->getMessage()
-            ]);
+            return response()->json(['success' => false, 'message' => 'Gagal menghapus: ' . $e->getMessage()], 500);
         }
     }
-    
-    /**
-     * Get jadwal data for edit (AJAX).
-     */
+
     public function getJadwal($id)
     {
         if (!$this->canManage()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Akses ditolak'
-            ], 403);
+            return response()->json(['success' => false, 'message' => 'Akses ditolak'], 403);
         }
 
         $jadwal = DB::table('jadwal_dev')->where('id_jadwal', $id)->first();
         if ($jadwal) {
             return response()->json(['success' => true, 'data' => $jadwal]);
         }
-        return response()->json(['success' => false, 'message' => 'Data tidak ditemukan']);
+
+        return response()->json(['success' => false, 'message' => 'Data tidak ditemukan'], 404);
     }
 }
