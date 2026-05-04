@@ -1,61 +1,221 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🎭 Kinanti Art Productions — Management System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Tech Stack:** Laravel 12 · PHP 8.2+ · MySQL · Cloudinary · DomPDF  
+**Status:** Active Development  
+**Last Updated:** May 4, 2026
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 📋 Deskripsi Project
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Sistem manajemen sanggar tari **Kinanti Art Productions** yang mencakup:
+- Manajemen kelas, jenjang, dan siswa
+- Absensi via barcode scanner
+- Jadwal latihan
+- Transaksi keuangan (SPP, tabungan, dll)
+- Payroll & accounting
+- Inventaris video dan musik
+- Manajemen user, role, tugas & wewenang
+- ID Card generator
+- WhatsApp notification
+- Landing page CMS *(planned)*
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 🚀 Quick Start
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+```bash
+# 1. Clone & install
+git clone https://github.com/karpfunction-dot/kinanti-art.git
+cd kinanti-art
+composer install
+npm install
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+# 2. Environment
+cp .env.example .env
+php artisan key:generate
+# Edit .env → set DB_DATABASE, CLOUDINARY_URL
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+# 3. Database
+php artisan migrate
 
-## Laravel Sponsors
+# 4. Run
+php artisan serve
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## 📂 Dokumentasi Project
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development/)**
-- **[Active Logic](https://activelogic.com)**
+Semua dokumentasi teknis dan planning disimpan di folder `.github/ISSUES/`:
 
-## Contributing
+```
+.github/ISSUES/
+├── README.md                          ← Navigasi utama
+├── BACKEND-REFACTOR/                  ← Issues refactoring backend
+│   ├── README.md                      ← Index backend (13 modul)
+│   ├── 20-MASTER-BACKEND-REFACTOR.md  ← Master issue + aturan global
+│   ├── 21-REFACTOR-AUTH.md            ← Security fix (plain text password)
+│   ├── 22-REFACTOR-LAGU.md            ← Model Lagu + Form Request
+│   ├── 23-REFACTOR-ABSENSI.md         ← Model Absensi + Form Request
+│   ├── 24-REFACTOR-JADWAL.md          ← Model Jadwal + Form Request
+│   ├── 25-REFACTOR-KELAS.md           ← Model Jenjang, KelasSiswa + perbaiki Kelas
+│   ├── 26-REFACTOR-USER-PROFIL.md     ← Perbaiki User & ProfilAnggota
+│   ├── 27-REFACTOR-KOREOGRAFI.md      ← Model Koreografi
+│   ├── 28-REFACTOR-VIDEO.md           ← Model VideoInventaris
+│   ├── 29-REFACTOR-TRANSAKSI.md       ← Model SPP, Tabungan, Lainnya, Setting
+│   ├── 30-REFACTOR-ROLE-TUGAS.md      ← Model Tugas, Wewenang
+│   ├── 31-REFACTOR-DASHBOARD.md       ← Ganti raw query ke Model
+│   └── 32-REFACTOR-ROUTES.md          ← Cleanup routes/web.php
+│
+└── FRONTEND-LANDING/                  ← Issues landing page CMS (fitur baru)
+    ├── README.md                      ← Index frontend (14 file)
+    ├── 00-MASTER-ISSUE.md             ← Master issue landing page
+    ├── 00-SETUP-AND-PREPARATION.md    ← Database migration & model setup
+    ├── 01-MODULE-ARTICLE.md           ← CRUD Artikel/Berita
+    ├── 02-MODULE-EVENT.md             ← CRUD Event
+    ├── 03-MODULE-ACHIEVEMENT.md       ← CRUD Prestasi
+    ├── 04-MODULE-TRAINER.md           ← CRUD Profil Pelatih
+    ├── 05-MODULE-ACTIVITY.md          ← CRUD Kegiatan
+    ├── 06-MODULE-HERO-SLIDER.md       ← CRUD Hero Slider
+    ├── 07-MODULE-SITE-SETTINGS.md     ← CRUD Pengaturan Situs
+    ├── 08-LANDING-PAGE-FRONTEND.md    ← Frontend blade templates
+    ├── 09-VALIDATION-AND-SECURITY-CHECKLIST.md
+    ├── 10-DOCUMENTATION-AND-TRAINING.md
+    └── AUTHORIZATION_AND_PERMISSIONS.md
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## 🎯 Prioritas Pengerjaan Global
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Berikut urutan pengerjaan yang **wajib diikuti** untuk menghindari conflict dan regresi:
 
-## Security Vulnerabilities
+### 🔴 PRIORITAS 1 — Backend Refactoring (Fondasi)
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+> **Alasan:** Semua controller saat ini masih pakai `DB::table()` mentah.
+> Landing page CMS **tidak boleh dimulai** sebelum fondasi ini beres, karena akan memakai model dan pattern yang sama.
 
-## License
+| Tahap | Issue | Fokus | Durasi |
+|-------|-------|-------|--------|
+| **1.1** | [#21 Auth](/.github/ISSUES/BACKEND-REFACTOR/21-REFACTOR-AUTH.md) | 🔴 **SECURITY** — Hapus plain text password, buat Model Pendaftar | 0.5d |
+| **1.2** | [#22 Lagu](/.github/ISSUES/BACKEND-REFACTOR/22-REFACTOR-LAGU.md) | Modul paling simpel — latihan pola refactor | 0.5d |
+| **1.3** | [#23 Absensi](/.github/ISSUES/BACKEND-REFACTOR/23-REFACTOR-ABSENSI.md) | Core feature harian | 0.5d |
+| **1.4** | [#24 Jadwal](/.github/ISSUES/BACKEND-REFACTOR/24-REFACTOR-JADWAL.md) | Mirip pola Lagu | 0.5d |
+| **1.5** | [#25 Kelas](/.github/ISSUES/BACKEND-REFACTOR/25-REFACTOR-KELAS.md) | 3 sub-entity (Kelas, Jenjang, KelasSiswa) | 1d |
+| **1.6** | [#26 User & Profil](/.github/ISSUES/BACKEND-REFACTOR/26-REFACTOR-USER-PROFIL.md) | Perbaiki model User & ProfilAnggota | 0.5d |
+| **1.7** | [#27 Koreografi](/.github/ISSUES/BACKEND-REFACTOR/27-REFACTOR-KOREOGRAFI.md) | Butuh Model Lagu (#22) | 0.5d |
+| **1.8** | [#28 Video](/.github/ISSUES/BACKEND-REFACTOR/28-REFACTOR-VIDEO.md) | Butuh Model Lagu (#22) | 0.5d |
+| **1.9** | [#29 Transaksi](/.github/ISSUES/BACKEND-REFACTOR/29-REFACTOR-TRANSAKSI.md) | ⚠️ Controller terbesar (829 baris) | 1.5d |
+| **1.10** | [#30 Role & Tugas](/.github/ISSUES/BACKEND-REFACTOR/30-REFACTOR-ROLE-TUGAS.md) | Model Tugas, Wewenang | 0.5d |
+| **1.11** | [#31 Dashboard](/.github/ISSUES/BACKEND-REFACTOR/31-REFACTOR-DASHBOARD.md) | Read-only, ganti query ke Model | 0.5d |
+| **1.12** | [#32 Routes](/.github/ISSUES/BACKEND-REFACTOR/32-REFACTOR-ROUTES.md) | Cleanup terakhir (403 → <200 baris) | 0.5d |
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+**📖 Detail lengkap:** [BACKEND-REFACTOR/README.md](/.github/ISSUES/BACKEND-REFACTOR/README.md)
+
+---
+
+### 🟡 PRIORITAS 2 — Landing Page CMS (Fitur Baru)
+
+> **Alasan:** Baru bisa dimulai setelah fondasi backend beres karena menggunakan model, service, dan pattern yang sama.
+
+| Tahap | Issue | Fokus | Durasi |
+|-------|-------|-------|--------|
+| **2.0** | [#00 Setup](/.github/ISSUES/FRONTEND-LANDING/00-SETUP-AND-PREPARATION.md) | Migration, model, service layer | 1d |
+| **2.1** | [#01 Article](/.github/ISSUES/FRONTEND-LANDING/01-MODULE-ARTICLE.md) | CRUD Artikel + Quill editor | 0.5d |
+| **2.2** | [#02 Event](/.github/ISSUES/FRONTEND-LANDING/02-MODULE-EVENT.md) | CRUD Event | 0.5d |
+| **2.3** | [#03 Achievement](/.github/ISSUES/FRONTEND-LANDING/03-MODULE-ACHIEVEMENT.md) | CRUD Prestasi | 0.5d |
+| **2.4** | [#04 Trainer](/.github/ISSUES/FRONTEND-LANDING/04-MODULE-TRAINER.md) | CRUD Profil Pelatih | 0.5d |
+| **2.5** | [#05 Activity](/.github/ISSUES/FRONTEND-LANDING/05-MODULE-ACTIVITY.md) | CRUD Kegiatan | 0.5d |
+| **2.6** | [#06 Hero Slider](/.github/ISSUES/FRONTEND-LANDING/06-MODULE-HERO-SLIDER.md) | CRUD Slider | 0.5d |
+| **2.7** | [#07 Site Settings](/.github/ISSUES/FRONTEND-LANDING/07-MODULE-SITE-SETTINGS.md) | CRUD Pengaturan Web | 0.5d |
+| **2.8** | [#08 Frontend](/.github/ISSUES/FRONTEND-LANDING/08-LANDING-PAGE-FRONTEND.md) | Blade templates landing page | 2d |
+| **2.9** | [#09 Validation](/.github/ISSUES/FRONTEND-LANDING/09-VALIDATION-AND-SECURITY-CHECKLIST.md) | Security & performance testing | 1d |
+| **2.10** | [#10 Documentation](/.github/ISSUES/FRONTEND-LANDING/10-DOCUMENTATION-AND-TRAINING.md) | User guide & technical docs | 0.5d |
+
+**📖 Detail lengkap:** [FRONTEND-LANDING/README.md](/.github/ISSUES/FRONTEND-LANDING/README.md)
+
+---
+
+## 📊 Timeline Global
+
+```
+═══════════════════════════════════════════════════════════════
+  PRIORITAS 1: BACKEND REFACTORING          ~8 hari (1.5 minggu)
+═══════════════════════════════════════════════════════════════
+  Day 1       #21 Auth (security fix)
+  Day 2-3     #22 Lagu, #23 Absensi, #24 Jadwal     (paralel)
+  Day 3-4     #25 Kelas, #26 User & Profil           (paralel)
+  Day 4-5     #27 Koreografi, #28 Video, #30 Role    (paralel)
+  Day 5-7     #29 Transaksi (controller terbesar)
+  Day 7-8     #31 Dashboard, #32 Routes (cleanup)
+
+═══════════════════════════════════════════════════════════════
+  PRIORITAS 2: FRONTEND LANDING PAGE CMS    ~7 hari (1.5 minggu)
+═══════════════════════════════════════════════════════════════
+  Day 9       #00 Setup & Preparation
+  Day 10-11   #01-#07 Module CRUD            (3 dev paralel)
+  Day 12-13   #08 Frontend Landing Page
+  Day 14      #09 Validation & Security
+  Day 14+     #10 Documentation (opsional)
+
+═══════════════════════════════════════════════════════════════
+  TOTAL: ~3 minggu
+═══════════════════════════════════════════════════════════════
+```
+
+---
+
+## 📊 Inventaris Lengkap (29 file .md)
+
+### Root (1 file)
+| File | Ukuran | Fungsi |
+|------|--------|--------|
+| `README.md` | 3.9 KB | Dokumentasi project utama (file ini) |
+
+### `.github/ISSUES/` (1 file)
+| File | Ukuran | Fungsi |
+|------|--------|--------|
+| `README.md` | 0.9 KB | Navigasi utama ke subfolder |
+
+### `.github/ISSUES/BACKEND-REFACTOR/` (14 file)
+| File | Ukuran | Fungsi |
+|------|--------|--------|
+| `README.md` | 4.6 KB | Index backend + progress tracker |
+| `20-MASTER-BACKEND-REFACTOR.md` | 4.8 KB | Master issue, aturan global, dependency graph |
+| `21-REFACTOR-AUTH.md` | 6.7 KB | Security fix + Model Pendaftar |
+| `22-REFACTOR-LAGU.md` | 6.1 KB | Model Lagu + LaguRequest |
+| `23-REFACTOR-ABSENSI.md` | 5.8 KB | Model Absensi + AbsensiScanRequest |
+| `24-REFACTOR-JADWAL.md` | 6.0 KB | Model Jadwal + JadwalRequest |
+| `25-REFACTOR-KELAS.md` | 3.3 KB | Model Jenjang, KelasSiswa |
+| `26-REFACTOR-USER-PROFIL.md` | 3.1 KB | Perbaiki User & ProfilAnggota |
+| `27-REFACTOR-KOREOGRAFI.md` | 2.1 KB | Model Koreografi |
+| `28-REFACTOR-VIDEO.md` | 3.6 KB | Model VideoInventaris |
+| `29-REFACTOR-TRANSAKSI.md` | 5.9 KB | 4 model transaksi + accounting |
+| `30-REFACTOR-ROLE-TUGAS.md` | 2.6 KB | Model Tugas, Wewenang |
+| `31-REFACTOR-DASHBOARD.md` | 2.5 KB | Ganti raw query ke Model |
+| `32-REFACTOR-ROUTES.md` | 6.2 KB | Cleanup routes 403→200 baris |
+
+### `.github/ISSUES/FRONTEND-LANDING/` (14 file)
+| File | Ukuran | Fungsi |
+|------|--------|--------|
+| `README.md` | 3.6 KB | Index frontend + timeline |
+| `00-MASTER-ISSUE.md` | 6.3 KB | Master issue landing page CMS |
+| `00-SETUP-AND-PREPARATION.md` | 22.3 KB | Database migration & model setup |
+| `01-MODULE-ARTICLE.md` | 25.7 KB | CRUD Artikel (contoh referensi paling lengkap) |
+| `02-MODULE-EVENT.md` | 2.4 KB | CRUD Event |
+| `03-MODULE-ACHIEVEMENT.md` | 2.9 KB | CRUD Prestasi |
+| `04-MODULE-TRAINER.md` | 2.7 KB | CRUD Profil Pelatih |
+| `05-MODULE-ACTIVITY.md` | 2.5 KB | CRUD Kegiatan |
+| `06-MODULE-HERO-SLIDER.md` | 3.6 KB | CRUD Hero Slider |
+| `07-MODULE-SITE-SETTINGS.md` | 5.5 KB | CRUD Pengaturan Situs |
+| `08-LANDING-PAGE-FRONTEND.md` | 24.4 KB | Frontend blade templates |
+| `09-VALIDATION-AND-SECURITY-CHECKLIST.md` | 13.7 KB | Security & performance testing |
+| `10-DOCUMENTATION-AND-TRAINING.md` | 11.5 KB | User guide & technical docs |
+| `AUTHORIZATION_AND_PERMISSIONS.md` | 10.9 KB | Permission matrix |
+
+---
+
+## 📞 Kontak
+
+**Repository:** [github.com/karpfunction-dot/kinanti-art](https://github.com/karpfunction-dot/kinanti-art)
