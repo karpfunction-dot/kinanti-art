@@ -8,10 +8,11 @@
 
 ## 📂 Folder Issues
 
-| Folder | Scope | Files | Prioritas |
-|--------|-------|-------|-----------|
+| Folder / File | Scope | Files | Prioritas |
+|:--- |:--- |:--- |:--- |
 | 📁 [BACKEND-REFACTOR/](./BACKEND-REFACTOR/README.md) | Refactoring internal (Model, Form Request, Route) | 14 file | 🔴 **Kerjakan Pertama** |
 | 📁 [FRONTEND-LANDING/](./FRONTEND-LANDING/README.md) | Landing Page CMS — fitur baru | 14 file | 🟡 Kerjakan Kedua |
+| 📄 **[SCHEDULE-TASK.md](./SCHEDULE-TASK.md)** | **Jadwal & Spesifikasi Engineer** | 1 file | 🔵 Panduan Tim |
 
 ---
 

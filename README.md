@@ -172,11 +172,8 @@ Berikut urutan pengerjaan yang **wajib diikuti** untuk menghindari conflict dan 
 | File | Ukuran | Fungsi |
 |------|--------|--------|
 | `README.md` | 3.9 KB | Dokumentasi project utama (file ini) |
-
-### `.github/ISSUES/` (1 file)
-| File | Ukuran | Fungsi |
-|------|--------|--------|
-| `README.md` | 0.9 KB | Navigasi utama ke subfolder |
+| `.github/ISSUES/README.md` | 1.1 KB | Navigasi utama ke subfolder |
+| `.github/ISSUES/SCHEDULE-TASK.md` | 4.2 KB | Jadwal & Spesifikasi Engineer |
 
 ### `.github/ISSUES/BACKEND-REFACTOR/` (14 file)
 | File | Ukuran | Fungsi |
