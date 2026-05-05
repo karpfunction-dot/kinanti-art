@@ -21,10 +21,13 @@ class CheckRole
         }
 
         $user = Auth::user();
-        $userRole = strtolower($user->role->nama_role ?? $user->nama_role ?? '');
+        $userRoleName = strtolower($user->role->nama_role ?? '');
+        $userRoleId = (string) $user->id_role;
+        
         $allowedRoles = array_map('strtolower', $roles);
 
-        if (empty($allowedRoles) || in_array($userRole, $allowedRoles, true)) {
+        // Check if the role matches by name or by ID
+        if (empty($allowedRoles) || in_array($userRoleName, $allowedRoles, true) || in_array($userRoleId, $allowedRoles, true)) {
             return $next($request);
         }
 

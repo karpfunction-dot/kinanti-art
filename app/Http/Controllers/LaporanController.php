@@ -6,9 +6,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Enums\RoleType;
 
 class LaporanController extends Controller
 {
+    /**
+     * Reusable date range logic for performance optimization.
+     */
+    private function getDateRange(string $bulan): array
+    {
+        $start = $bulan . '-01';
+        $end = date('Y-m-t', strtotime($start));
+        return [$start, $end];
+    }
+
     /**
      * Display attendance report page.
      */
@@ -18,11 +29,19 @@ class LaporanController extends Controller
         $role = $request->get('role', '');
         $kelas = $request->get('kelas', '');
         
+        $dateRange = $this->getDateRange($bulan);
+        
         // Get available classes for filter
-        $kelasList = DB::table('kelas')->select('id_kelas', 'nama_kelas')->orderBy('nama_kelas')->get();
+        $kelasList = DB::table('kelas')
+            ->select('id_kelas', 'nama_kelas')
+            ->orderBy('nama_kelas')
+            ->get();
         
         // Get available roles for filter
-        $roleList = DB::table('roles')->select('nama_role')->where('nama_role', '!=', 'admin')->get();
+        $roleList = DB::table('roles')
+            ->select('nama_role')
+            ->where('nama_role', '!=', RoleType::ADMIN->label())
+            ->get();
         
         // ==================== REKAP PER SISWA (untuk evaluasi) ====================
         $rekapSiswa = DB::table('users as u')
@@ -30,12 +49,12 @@ class LaporanController extends Controller
             ->leftJoin('roles as r', 'u.id_role', '=', 'r.id_role')
             ->leftJoin('kelas_siswa as ks', 'ks.id_user', '=', 'u.id_user')
             ->leftJoin('kelas as k', 'k.id_kelas', '=', 'ks.id_kelas')
-            ->leftJoin('absensi as a', function($join) use ($bulan) {
+            ->leftJoin('absensi as a', function($join) use ($dateRange) {
                 $join->on('a.id_user', '=', 'u.id_user')
-                     ->whereRaw("DATE_FORMAT(a.tanggal, '%Y-%m') = ?", [$bulan])
+                     ->whereBetween('a.tanggal', $dateRange)
                      ->where('a.status', 'Hadir');
             })
-            ->where('r.nama_role', 'siswa')
+            ->where('u.id_role', RoleType::SISWA->value)
             ->select(
                 'u.id_user',
                 'p.nama_lengkap',
@@ -48,7 +67,6 @@ class LaporanController extends Controller
             )
             ->groupBy('u.id_user', 'p.nama_lengkap', 'u.kode_barcode', 'k.nama_kelas');
         
-        // Apply kelas filter for siswa
         if ($kelas) {
             $rekapSiswa->where('k.id_kelas', $kelas);
         }
@@ -59,12 +77,12 @@ class LaporanController extends Controller
         $rekapPelatih = DB::table('users as u')
             ->leftJoin('profil_anggota as p', 'u.id_user', '=', 'p.id_user')
             ->leftJoin('roles as r', 'u.id_role', '=', 'r.id_role')
-            ->leftJoin('absensi as a', function($join) use ($bulan) {
+            ->leftJoin('absensi as a', function($join) use ($dateRange) {
                 $join->on('a.id_user', '=', 'u.id_user')
-                     ->whereRaw("DATE_FORMAT(a.tanggal, '%Y-%m') = ?", [$bulan])
+                     ->whereBetween('a.tanggal', $dateRange)
                      ->where('a.status', 'Hadir');
             })
-            ->where('r.nama_role', 'pelatih')
+            ->where('u.id_role', RoleType::PELATIH->value)
             ->select(
                 'u.id_user',
                 'p.nama_lengkap',
@@ -82,9 +100,9 @@ class LaporanController extends Controller
         $rekapPerKelas = DB::table('kelas as k')
             ->leftJoin('kelas_siswa as ks', 'ks.id_kelas', '=', 'k.id_kelas')
             ->leftJoin('users as u', 'u.id_user', '=', 'ks.id_user')
-            ->leftJoin('absensi as a', function($join) use ($bulan) {
+            ->leftJoin('absensi as a', function($join) use ($dateRange) {
                 $join->on('a.id_user', '=', 'u.id_user')
-                     ->whereRaw("DATE_FORMAT(a.tanggal, '%Y-%m') = ?", [$bulan])
+                     ->whereBetween('a.tanggal', $dateRange)
                      ->where('a.status', 'Hadir');
             })
             ->select(
@@ -98,63 +116,52 @@ class LaporanController extends Controller
             ->get();
         
         // ==================== DETAIL ABSENSI HARIAN ====================
-        $detailAbsensi = DB::table('absensi as a')
+        $detailAbsensiQuery = DB::table('absensi as a')
             ->leftJoin('users as u', 'a.id_user', '=', 'u.id_user')
             ->leftJoin('profil_anggota as p', 'p.id_user', '=', 'a.id_user')
             ->leftJoin('roles as r', 'u.id_role', '=', 'r.id_role')
             ->leftJoin('kelas_siswa as ks', 'ks.id_user', '=', 'u.id_user')
             ->leftJoin('kelas as k', 'k.id_kelas', '=', 'ks.id_kelas')
             ->select(
-                'a.id_absensi',
-                'a.tanggal',
-                'a.waktu',
-                'a.status',
-                'a.kategori',
-                'a.lokasi',
-                'p.nama_lengkap',
-                'u.kode_barcode',
-                'r.nama_role as role_name',
-                'k.nama_kelas'
+                'a.id_absensi', 'a.tanggal', 'a.waktu', 'a.status', 'a.kategori', 'a.lokasi',
+                'p.nama_lengkap', 'u.kode_barcode', 'r.nama_role as role_name', 'k.nama_kelas'
             );
         
-        // Apply filters
         if ($bulan) {
-            $detailAbsensi->whereRaw("DATE_FORMAT(a.tanggal, '%Y-%m') = ?", [$bulan]);
+            $detailAbsensiQuery->whereBetween('a.tanggal', $dateRange);
         }
         
         if ($role) {
-            $detailAbsensi->where('r.nama_role', $role);
+            $detailAbsensiQuery->where('r.nama_role', $role);
         }
         
         if ($kelas) {
-            $detailAbsensi->where('k.id_kelas', $kelas);
+            $detailAbsensiQuery->where('k.id_kelas', $kelas);
         }
         
-        $detailAbsensi = $detailAbsensi->orderBy('a.tanggal', 'desc')
+        $detailAbsensi = $detailAbsensiQuery->orderBy('a.tanggal', 'desc')
             ->orderBy('a.waktu', 'desc')
             ->get();
         
         // ==================== STATISTIK UMUM ====================
         $statistik = [
             'total_hadir' => DB::table('absensi')
-                ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
+                ->whereBetween('tanggal', $dateRange)
                 ->where('status', 'Hadir')
                 ->count(),
             'total_izin' => DB::table('absensi')
-                ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
+                ->whereBetween('tanggal', $dateRange)
                 ->where('status', 'Izin')
                 ->count(),
             'total_alfa' => DB::table('absensi')
-                ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
+                ->whereBetween('tanggal', $dateRange)
                 ->where('status', 'Alfa')
                 ->count(),
-            'total_siswa_aktif' => DB::table('users as u')
-                ->leftJoin('roles as r', 'u.id_role', '=', 'r.id_role')
-                ->where('r.nama_role', 'siswa')
+            'total_siswa_aktif' => DB::table('users')
+                ->where('id_role', RoleType::SISWA->value)
                 ->count(),
-            'total_pelatih_aktif' => DB::table('users as u')
-                ->leftJoin('roles as r', 'u.id_role', '=', 'r.id_role')
-                ->where('r.nama_role', 'pelatih')
+            'total_pelatih_aktif' => DB::table('users')
+                ->where('id_role', RoleType::PELATIH->value)
                 ->count(),
         ];
         
@@ -168,10 +175,7 @@ class LaporanController extends Controller
         $bulanText = $monthNames[date('m', strtotime($bulan))] . ' ' . date('Y', strtotime($bulan));
         
         // Get selected class name
-        $selectedKelas = null;
-        if ($kelas) {
-            $selectedKelas = DB::table('kelas')->where('id_kelas', $kelas)->first();
-        }
+        $selectedKelas = $kelas ? DB::table('kelas')->select('id_kelas', 'nama_kelas')->where('id_kelas', $kelas)->first() : null;
         
         return view('laporan.index', compact(
             'rekapSiswa', 'rekapPelatih', 'rekapPerKelas', 'detailAbsensi',
@@ -189,18 +193,20 @@ class LaporanController extends Controller
         $role = $request->get('role', '');
         $kelas = $request->get('kelas', '');
         
+        $dateRange = $this->getDateRange($bulan);
+        
         // Rekap per siswa
-        $rekapSiswa = DB::table('users as u')
+        $rekapSiswaQuery = DB::table('users as u')
             ->leftJoin('profil_anggota as p', 'u.id_user', '=', 'p.id_user')
             ->leftJoin('roles as r', 'u.id_role', '=', 'r.id_role')
             ->leftJoin('kelas_siswa as ks', 'ks.id_user', '=', 'u.id_user')
             ->leftJoin('kelas as k', 'k.id_kelas', '=', 'ks.id_kelas')
-            ->leftJoin('absensi as a', function($join) use ($bulan) {
+            ->leftJoin('absensi as a', function($join) use ($dateRange) {
                 $join->on('a.id_user', '=', 'u.id_user')
-                     ->whereRaw("DATE_FORMAT(a.tanggal, '%Y-%m') = ?", [$bulan])
+                     ->whereBetween('a.tanggal', $dateRange)
                      ->where('a.status', 'Hadir');
             })
-            ->where('r.nama_role', 'siswa')
+            ->where('u.id_role', RoleType::SISWA->value)
             ->select(
                 'p.nama_lengkap',
                 'k.nama_kelas',
@@ -209,15 +215,15 @@ class LaporanController extends Controller
             ->groupBy('p.nama_lengkap', 'k.nama_kelas');
         
         if ($kelas) {
-            $rekapSiswa->where('k.id_kelas', $kelas);
+            $rekapSiswaQuery->where('k.id_kelas', $kelas);
         }
         
-        $rekapSiswa = $rekapSiswa->orderBy('p.nama_lengkap')->get();
+        $rekapSiswa = $rekapSiswaQuery->orderBy('p.nama_lengkap')->get();
         
         // Statistik
         $statistik = [
             'total_hadir' => DB::table('absensi')
-                ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulan])
+                ->whereBetween('tanggal', $dateRange)
                 ->where('status', 'Hadir')
                 ->count(),
             'total_siswa' => $rekapSiswa->count(),

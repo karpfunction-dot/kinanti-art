@@ -2,69 +2,34 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
+use App\Models\Lagu;
+use App\Models\Kelas;
+use App\Http\Requests\LaguRequest;
 
 class LaguController extends Controller
 {
-    /**
-     * Display a listing of lagu.
-     */
     public function index()
     {
-        if (auth()->user()->role->nama_role !== 'admin') {
+        if (auth()->user()->id_role !== 1) {
             return redirect()->route('dashboard')->with('error', 'Akses ditolak');
         }
-        
-        // Ambil data lagu dengan join kelas
-        $lagu = DB::table('lagu as l')
-            ->leftJoin('kelas as k', 'l.id_kelas', '=', 'k.id_kelas')
-            ->select('l.*', 'k.nama_kelas')
-            ->orderBy('l.id_lagu', 'desc')
+
+        $lagu = Lagu::with('kelas')
+            ->orderBy('id_lagu', 'desc')
             ->get();
-        
-        // Ambil data kelas untuk dropdown
-        $kelas = DB::table('kelas')->where('aktif', 1)->orderBy('nama_kelas')->get();
-        
+
+        $kelas = Kelas::where('aktif', 1)
+            ->orderBy('nama_kelas')
+            ->get();
+
         return view('lagu.index', compact('lagu', 'kelas'));
     }
-    
-    /**
-     * Store a newly created lagu.
-     */
-    public function store(Request $request)
+
+    public function store(LaguRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'judul_lagu' => 'required|string|max:150',
-            'pencipta' => 'nullable|string|max:100',
-            'lisensi' => 'required|in:gratis,berbayar',
-            'status_lisensi' => 'required|in:bebas,izin,internal',
-            'status' => 'required|in:aktif,nonaktif',
-            'id_kelas' => 'nullable|exists:kelas,id_kelas',
-            'link_lisensi' => 'nullable|url|max:255',
-        ]);
-        
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => $validator->errors()->first()
-            ]);
-        }
-        
         try {
-            DB::table('lagu')->insert([
-                'judul_lagu' => $request->judul_lagu,
-                'pencipta' => $request->pencipta,
-                'lisensi' => $request->lisensi,
-                'status_lisensi' => $request->status_lisensi,
-                'status' => $request->status,
-                'id_kelas' => $request->id_kelas ?: null,
-                'link_lisensi' => $request->link_lisensi,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            
+            Lagu::create($request->validated());
+
             return response()->json([
                 'success' => true,
                 'message' => '✅ Lagu berhasil ditambahkan'
@@ -76,41 +41,13 @@ class LaguController extends Controller
             ]);
         }
     }
-    
-    /**
-     * Update the specified lagu.
-     */
-    public function update(Request $request, $id)
+
+    public function update(LaguRequest $request, $id)
     {
-        $validator = Validator::make($request->all(), [
-            'judul_lagu' => 'required|string|max:150',
-            'pencipta' => 'nullable|string|max:100',
-            'lisensi' => 'required|in:gratis,berbayar',
-            'status_lisensi' => 'required|in:bebas,izin,internal',
-            'status' => 'required|in:aktif,nonaktif',
-            'id_kelas' => 'nullable|exists:kelas,id_kelas',
-            'link_lisensi' => 'nullable|url|max:255',
-        ]);
-        
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => $validator->errors()->first()
-            ]);
-        }
-        
         try {
-            DB::table('lagu')->where('id_lagu', $id)->update([
-                'judul_lagu' => $request->judul_lagu,
-                'pencipta' => $request->pencipta,
-                'lisensi' => $request->lisensi,
-                'status_lisensi' => $request->status_lisensi,
-                'status' => $request->status,
-                'id_kelas' => $request->id_kelas ?: null,
-                'link_lisensi' => $request->link_lisensi,
-                'updated_at' => now(),
-            ]);
-            
+            $lagu = Lagu::findOrFail($id);
+            $lagu->update($request->validated());
+
             return response()->json([
                 'success' => true,
                 'message' => '✏️ Lagu berhasil diperbarui'
@@ -122,15 +59,21 @@ class LaguController extends Controller
             ]);
         }
     }
-    
-    /**
-     * Remove the specified lagu.
-     */
+
     public function destroy($id)
     {
         try {
-            DB::table('lagu')->where('id_lagu', $id)->delete();
-            
+            $lagu = Lagu::findOrFail($id);
+
+            if ($lagu->jadwal()->exists() || $lagu->koreografi()->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Lagu tidak bisa dihapus karena masih digunakan'
+                ], 400);
+            }
+
+            $lagu->delete();
+
             return response()->json([
                 'success' => true,
                 'message' => '🗑️ Lagu berhasil dihapus'
@@ -142,24 +85,21 @@ class LaguController extends Controller
             ]);
         }
     }
-    
-    /**
-     * Get lagu data for edit (AJAX).
-     */
+
     public function getLagu($id)
     {
-        $lagu = DB::table('lagu')->where('id_lagu', $id)->first();
-        
-        if ($lagu) {
+        try {
+            $lagu = Lagu::with('kelas')->findOrFail($id);
+
             return response()->json([
                 'success' => true,
                 'data' => $lagu
             ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data tidak ditemukan'
+            ], 404);
         }
-        
-        return response()->json([
-            'success' => false,
-            'message' => 'Data tidak ditemukan'
-        ]);
     }
 }

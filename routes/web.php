@@ -353,7 +353,7 @@ Route::post('/register', [RegisterController::class, 'register'])->name('registe
 
 // Rute admin untuk kelola pendaftar (harus login & admin)
 Route::middleware(['auth'])->group(function () {
-    Route::get('/admin/pendaftar', [RegisterController::class, 'listPendaftar'])->name('admin.pendaftar');
+    Route::get('/admin/pendaftar', [RegisterController::class, 'index'])->name('admin.pendaftar');
     Route::post('/admin/pendaftar/approve/{id}', [RegisterController::class, 'approve'])->name('admin.pendaftar.approve');
     Route::post('/admin/pendaftar/reject/{id}', [RegisterController::class, 'reject'])->name('admin.pendaftar.reject');
 });
